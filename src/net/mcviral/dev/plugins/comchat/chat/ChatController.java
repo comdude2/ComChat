@@ -1,11 +1,15 @@
 package net.mcviral.dev.plugins.comchat.chat;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
 import net.mcviral.dev.plugins.comchat.main.ComChat;
+import net.mcviral.dev.plugins.comchat.util.FileManager;
 
 public class ChatController {
 	
@@ -16,6 +20,8 @@ public class ChatController {
 	
 	public ChatController(ComChat chat){
 		this.chat = chat;
+		globalchat = new Chat(0, "GLOBAL");
+		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 	}
 	
 	//Chat methods that chat in the right channel
@@ -24,10 +30,20 @@ public class ChatController {
 		Chatter chatter = getChatter(player.getUniqueId());
 		if (chatter != null){
 			Chat chatToSend = chatter.getFocus();
+			LinkedList <Player> recipients = new LinkedList <Player> ();
 			if (chatToSend == globalchat){
-				
+				for (Chatter c : chatters){
+					Player p = chat.getServer().getPlayer(c.getUuid());
+					if (p != null){
+						recipients.add(p);
+					}
+				}
+				String msg = formatMessage(player, chatter, chatToSend, message);
+				chat.log.info(player.getName() + ": " + message);
+				for (Player p : recipients){
+					p.sendMessage(msg);
+				}
 			}else{
-				LinkedList <Player> recipients = new LinkedList <Player> ();
 				for (Chatter c : chatters){
 					if (c.getChats().contains(chatToSend)){
 						Player p = chat.getServer().getPlayer(c.getUuid());
@@ -37,7 +53,7 @@ public class ChatController {
 					}
 				}
 				String msg = formatMessage(player, chatter, chatToSend, message);
-				
+				chat.log.info(player.getName() + ": " + message);
 				for (Player p : recipients){
 					p.sendMessage(msg);
 				}
@@ -47,8 +63,29 @@ public class ChatController {
 		}
 	}
 	
-	public String formatMessage(Player player, Chatter chatter, Chat chat, String message){
-		return null;
+	public String formatMessage(Player player, Chatter chatter, Chat c, String message){
+		String msg = "";
+		if (c.getPrefix() != null){
+			msg = msg + c.getPrefix() + " ";
+		}
+		//if (c.getDisplayRank()){
+			//msg = msg + c.getPrefix();
+		//}
+		msg = msg + player.getDisplayName() + " ";
+		if (c.getSuffix() != null){
+			msg = msg + c.getSuffix();
+		}
+		msg = msg + colour(" &f: ");
+		if (c.getMessageColour() != null){
+			msg = msg + c.getMessageColour() + message;
+		}else{
+			if (player.hasPermission("cc.colour")){
+				msg = msg + colour(message);
+			}else{
+				msg = msg + message;
+			}
+		}
+		return msg;
 	}
 	
 	public Chatter getChatter(UUID uuid){
@@ -60,11 +97,11 @@ public class ChatController {
 		return null;
 	}
 
-	public Chat getGlobalchat() {
+	public Chat getGlobalChat() {
 		return globalchat;
 	}
 
-	public void setGlobalchat(Chat globalchat) {
+	public void setGlobalChat(Chat globalchat) {
 		this.globalchat = globalchat;
 	}
 
@@ -95,5 +132,60 @@ public class ChatController {
     	}
     	return coloredMsg;
     }
+	
+	public void loadChats(){
+		File folder = new File(chat.getDataFolder() + "/chats/");
+		if (!folder.exists()){
+			folder.mkdirs();
+		}
+		List <File> files = Arrays.asList(folder.listFiles());
+		FileManager fm = null;
+		if (files.size() > 0){
+			chats = new LinkedList <Chat> ();
+			for (File f : files){
+				if (!f.getName().equalsIgnoreCase("next.yml")){
+					fm = new FileManager(chat, "chats/", f.getName().substring(0, f.getName().length() - 5));
+					int chatID = fm.getYAML().getInt("chatID");
+					String name = fm.getYAML().getString("name");
+					String prefix = fm.getYAML().getString("prefix");
+					String suffix = fm.getYAML().getString("suffix");
+					String messageColour = fm.getYAML().getString("messageColour");
+					boolean displayRank =  fm.getYAML().getBoolean("displayRank");
+					prefix = stringToNull(prefix);
+					suffix = stringToNull(suffix);
+					messageColour = stringToNull(messageColour);
+					Chat c = new Chat(chatID, name);
+					c.setPrefix(prefix);
+					c.setSuffix(suffix);
+					c.setMessageColour(messageColour);
+					c.setDisplayRank(displayRank);
+					if (c.getName().equals("GLOBAL")){
+						globalchat = c;
+						chat.log.info("Global chat loaded.");
+					}else{
+						chats.add(c);
+						chat.log.info("Chat: " + c.getName() + " loaded.");
+					}
+				}
+			}
+		}
+	}
+	
+	private String stringToNull(String s){
+		if (s == "null"){
+			s = null;
+		}else{
+			colour(s);
+		}
+		return s;
+	}
+	
+	private String nullToString(String s){
+		return null;
+	}
+	
+	public void saveChats(){
+		nullToString("");
+	}
 	
 }
