@@ -1,0 +1,4 @@
+name: ComChat
+main: net.mcviral.dev.plugins.comchat.main.ComChat
+version: 1.0
+author: comdude2
