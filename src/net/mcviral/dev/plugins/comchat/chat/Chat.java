@@ -1,5 +1,8 @@
 package net.mcviral.dev.plugins.comchat.chat;
 
+import java.util.LinkedList;
+import java.util.UUID;
+
 public class Chat {
 	
 	private int chatID = 0;
@@ -7,6 +10,8 @@ public class Chat {
 	private String prefix = null;
 	private String suffix = null;
 	private String messageColour = null;
+	private LinkedList <UUID> admins = new LinkedList <UUID> ();
+	private LinkedList <UUID> moderators = new LinkedList <UUID> ();
 	private boolean displayRank = false;
 	
 	public Chat(int chatID, String name){
@@ -52,6 +57,22 @@ public class Chat {
 
 	public void setMessageColour(String messageColour) {
 		this.messageColour = messageColour;
+	}
+
+	public LinkedList <UUID> getAdmins() {
+		return admins;
+	}
+
+	public void setAdmins(LinkedList <UUID> admins) {
+		this.admins = admins;
+	}
+
+	public LinkedList <UUID> getModerators() {
+		return moderators;
+	}
+
+	public void setModerators(LinkedList <UUID> moderators) {
+		this.moderators = moderators;
 	}
 
 	public boolean getDisplayRank() {

@@ -1,5 +1,7 @@
 package net.mcviral.dev.plugins.comchat.main;
 
+import java.io.File;
+
 import net.mcviral.dev.plugins.comchat.chat.ChatController;
 import net.mcviral.dev.plugins.comchat.util.Log;
 
@@ -26,6 +28,17 @@ public class ComChat extends JavaPlugin{
 	
 	public void onDisable(){
 		this.getLogger().info(this.getDescription().getName() + " Disabled!");
+	}
+	
+	public void setupFolders(){
+		File folder = new File(this.getDataFolder() + "/chats/");
+		if (!folder.exists()){
+			folder.mkdirs();
+		}
+		folder = new File(this.getDataFolder() + "/chatters/");
+		if (!folder.exists()){
+			folder.mkdirs();
+		}
 	}
 	
 	public ChatController getChatController(){

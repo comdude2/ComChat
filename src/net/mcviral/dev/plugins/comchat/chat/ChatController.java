@@ -20,8 +20,8 @@ public class ChatController {
 	
 	public ChatController(ComChat chat){
 		this.chat = chat;
-		globalchat = new Chat(0, "GLOBAL");
-		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
+		//globalchat = new Chat(0, "GLOBAL");
+		//globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 	}
 	
 	//Chat methods that chat in the right channel
@@ -150,6 +150,23 @@ public class ChatController {
 					String prefix = fm.getYAML().getString("prefix");
 					String suffix = fm.getYAML().getString("suffix");
 					String messageColour = fm.getYAML().getString("messageColour");
+					List <String> tempadmins = fm.getYAML().getStringList("admins");
+					LinkedList <UUID> admins = new LinkedList <UUID> ();
+					UUID uuid = null;
+					for (String s : tempadmins){
+						uuid = UUID.fromString(s);
+						if (uuid != null){
+							admins.add(uuid);
+						}
+					}
+					List <String> tempmods = fm.getYAML().getStringList("moderators");
+					LinkedList <UUID> mods = new LinkedList <UUID> ();
+					for (String s : tempmods){
+						uuid = UUID.fromString(s);
+						if (uuid != null){
+							mods.add(uuid);
+						}
+					}
 					boolean displayRank =  fm.getYAML().getBoolean("displayRank");
 					prefix = stringToNull(prefix);
 					suffix = stringToNull(suffix);
@@ -186,6 +203,39 @@ public class ChatController {
 	
 	public void saveChats(){
 		nullToString("");
+	}
+	
+	public void loadChatter(UUID uuid){
+		FileManager fm = new FileManager(chat, "chatters/", uuid.toString());
+		if (fm.exists()){
+			List <Integer> chatids = fm.getYAML().getIntegerList("chats");
+			LinkedList <Chat> chatterchats = new LinkedList <Chat> ();
+			for (Chat c : chats){
+				for (Integer i : chatids){
+					if (c.getChatID() == i){
+						chatterchats.add(c);
+						break;
+					}
+				}
+			}
+			String prefix = stringToNull(fm.getYAML().getString("prefix"));
+			String suffix = stringToNull(fm.getYAML().getString("suffix"));
+			boolean muted = fm.getYAML().getBoolean("muted");
+			long mutedUntil = fm.getYAML().getLong("mutedUntil");
+			Chatter chatter = new Chatter(uuid, globalchat);
+			chatter.setChats(chatterchats);
+			chatter.setPrefix(prefix);
+			chatter.setSuffix(suffix);
+			chatter.setMuted(muted);
+			chatter.setMutedUntil(mutedUntil);
+			chatters.add(chatter);
+		}else{
+			
+		}
+	}
+	
+	public void saveChatter(UUID uuid){
+		
 	}
 	
 }

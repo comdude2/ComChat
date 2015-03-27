@@ -11,6 +11,7 @@ public class Chatter {
 	private String prefix = null;
 	private String suffix = null;
 	private boolean muted = false;
+	private long mutedUntil = 0L;
 	
 	public Chatter(UUID uuid, Chat focus){
 		this.uuid = uuid;
@@ -59,6 +60,14 @@ public class Chatter {
 
 	public void setSuffix(String suffix) {
 		this.suffix = suffix;
+	}
+
+	public long getMutedUntil() {
+		return mutedUntil;
+	}
+
+	public void setMutedUntil(long mutedUntil) {
+		this.mutedUntil = mutedUntil;
 	}
 	
 }
