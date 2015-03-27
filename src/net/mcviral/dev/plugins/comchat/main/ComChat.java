@@ -22,6 +22,7 @@ package net.mcviral.dev.plugins.comchat.main;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.UUID;
 
 import net.mcviral.dev.plugins.comchat.chat.Chat;
 import net.mcviral.dev.plugins.comchat.chat.ChatController;
@@ -101,7 +102,7 @@ public class ComChat extends JavaPlugin{
 			if (cmd.getName().equalsIgnoreCase("chat")) {
 				if (args.length > 0){
 					if (args.length == 1){
-						if (args[0].equalsIgnoreCase("reload")){
+						if (args[0].equalsIgnoreCase("relstart")){
 							if (sender.hasPermission("chat.admin")){
 								boolean done = reload();
 								if (done){
@@ -111,6 +112,22 @@ public class ComChat extends JavaPlugin{
 								}
 							}else{
 								//no perms
+								noPerms(sender);
+							}
+						}else if (args[0].equalsIgnoreCase("reload")){
+							if (sender.hasPermission("chat.admin")){
+								this.getChatController().loadChats();
+								sender.sendMessage(ChatColor.GREEN + "Reloaded!");
+							}else{
+								//no perms
+								noPerms(sender);
+							}
+						}else if (args[0].equalsIgnoreCase("save")){
+							if (sender.hasPermission("chat.admin")){
+								this.getChatController().saveChats();
+								this.getChatController().saveChatters();
+								sender.sendMessage(ChatColor.GREEN + "Saved all objects!");
+							}else{
 								noPerms(sender);
 							}
 						}else if (args[0].equalsIgnoreCase("spy")){
@@ -219,6 +236,31 @@ public class ComChat extends JavaPlugin{
 								//can't find them.
 								sender.sendMessage(ChatColor.RED + "Couldn't find you on file! What's going on? (Contact a warden)");
 							}
+						}else if (args[0].equalsIgnoreCase("create")){
+							if (sender.hasPermission("chat.create")){
+								int id = this.getChatController().getNextChatID();
+								Chat c = new Chat(id, args[1]);
+								LinkedList <UUID> list = new LinkedList <UUID> ();
+								list.add(p.getUniqueId());
+								c.setAdmins(list);
+								c.setDisplayRank(false);
+								c.setJoinable(false);
+								c.setMessageColour("&b");
+								c.setPrefix("&f(&b" + c.getName() + "&f)");
+								c.setAliasApproved(false);
+								boolean created = this.getChatController().createChat(c);
+								if (created){
+									this.getChatController().setNextChatID(this.getChatController().getNextChatID() + 1);
+									sender.sendMessage(ChatColor.GREEN + "Chat created.");
+								}else{
+									sender.sendMessage(ChatColor.RED + "Chat not created, the name you picked is already in use.");
+								}
+							}else{
+								noPerms(sender);
+							}
+						}else if (args[0].equalsIgnoreCase("delete")){
+							//Add
+							sender.sendMessage(ChatColor.RED + "This is not implemented yet.");
 						}else{
 							help(sender);
 						}

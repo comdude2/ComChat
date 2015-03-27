@@ -53,31 +53,44 @@ public class ChatController {
 	}
 	
 	public void saveDefaultGlobalChat(){
+		chat.log.info("Checking for global.yml");
 		File folder = new File(chat.getDataFolder() + "/chats/global.yml");
 		if (!folder.exists()){
-			folder.mkdirs();
-			try {
-				folder.createNewFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			chat.log.info("Saving default global.yml");
 			FileManager fm = new FileManager(chat, "chats/", "global");
 			if (!fm.exists()){
-				fm.createFile();
+				chat.log.info("Created global.yml: " + fm.createFile());
 			}
-			fm.getYAML().set("name", "GLOBAL");
+			String name = "GLOBAL";
+			fm.getYAML().set("chatID", 0);
+			fm.getYAML().set("name", nullToString(name));
 			fm.getYAML().set("prefix", nullToString("&aGLOBAL"));
 			fm.getYAML().set("suffix", nullToString(null));
 			fm.getYAML().set("messageColour", nullToString(null));
-			LinkedList <String> list = new LinkedList <String> ();
-			fm.getYAML().set("admins", list);
-			fm.getYAML().set("moderators", list);
+			//LinkedList <String> list = new LinkedList <String> ();
+			fm.getYAML().set("admins", nullToString(null));
+			fm.getYAML().set("moderators", nullToString(null));
 			fm.getYAML().set("displayRank", true);
 			fm.getYAML().set("alias", "/gl");
 			fm.getYAML().set("aliasApproved", true);
 			fm.getYAML().set("joinable", true);
 			fm.saveYAML();
+		}else{
+			chat.log.info("global.yml Found");
+		}
+		
+		chat.log.info("Checking for next.yml");
+		folder = new File(chat.getDataFolder() + "/chats/next.yml");
+		if (!folder.exists()){
+			chat.log.info("Saving default next.yml");
+			FileManager fm = new FileManager(chat, "chats/", "next");
+			if (!fm.exists()){
+				chat.log.info("Created next.yml: " + fm.createFile());
+			}
+			fm.getYAML().set("next", 1);
+			fm.saveYAML();
+		}else{
+			chat.log.info("next.yml Found");
 		}
 		
 	}
@@ -192,6 +205,52 @@ public class ChatController {
 		return msg;
 	}
 	
+	public boolean createChat(Chat c){
+		for (Chat cht : chats){
+			if (cht.getName().equalsIgnoreCase(c.getName())){
+				return false;
+			}
+		}
+		if (!c.getName().equalsIgnoreCase("global")){
+			chats.add(c);
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public boolean deleteChat(Chat c){
+		for (Chat cht : chats){
+			if (cht.equals(c)){
+				File f = new File(chat.getDataFolder() + "/chats/" + c.getChatID() + ".yml");
+				if (f.exists()){
+					f.delete();
+				}
+				chats.remove(c);
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public int getNextChatID(){
+		FileManager fm = new FileManager(chat, "chats/", "next");
+		if (!fm.exists()){
+			fm.createFile();
+			return -1;
+		}
+		return fm.getYAML().getInt("next");
+	}
+	
+	public void setNextChatID(int value){
+		FileManager fm = new FileManager(chat, "chats/", "next");
+		if (!fm.exists()){
+			fm.createFile();
+		}
+		fm.getYAML().set("next", value);
+		fm.saveYAML();
+	}
+	
 	public Chat getChat(String name){
 		for (Chat c : chats){
 			if (c.getName().equalsIgnoreCase(name)){
@@ -247,68 +306,96 @@ public class ChatController {
     }
 	
 	public void loadChats(){
-		File folder = new File(chat.getDataFolder() + "/chats/");
-		if (!folder.exists()){
-			folder.mkdirs();
-		}
-		List <File> files = Arrays.asList(folder.listFiles());
-		FileManager fm = null;
-		if (files.size() > 0){
+		try{
 			chats = new LinkedList <Chat> ();
-			for (File f : files){
-				if (!f.getName().equalsIgnoreCase("next.yml")){
-					chat.log.info("Loading chat with id: " + f.getName());
-					fm = new FileManager(chat, "chats/", f.getName().substring(0, f.getName().length() - 5));
-					int chatID = fm.getYAML().getInt("chatID");
-					String name = fm.getYAML().getString("name");
-					String prefix = fm.getYAML().getString("prefix");
-					String suffix = fm.getYAML().getString("suffix");
-					String messageColour = fm.getYAML().getString("messageColour");
-					List <String> tempadmins = fm.getYAML().getStringList("admins");
-					LinkedList <UUID> admins = new LinkedList <UUID> ();
-					UUID uuid = null;
-					for (String s : tempadmins){
-						uuid = UUID.fromString(s);
-						if (uuid != null){
-							admins.add(uuid);
-						}
-					}
-					List <String> tempmods = fm.getYAML().getStringList("moderators");
-					LinkedList <UUID> mods = new LinkedList <UUID> ();
-					for (String s : tempmods){
-						uuid = UUID.fromString(s);
-						if (uuid != null){
-							mods.add(uuid);
-						}
-					}
-					boolean displayRank =  fm.getYAML().getBoolean("displayRank");
-					String alias = fm.getYAML().getString("alias");
-					boolean aliasApproved = fm.getYAML().getBoolean("aliasApproved");
-					boolean joinable = fm.getYAML().getBoolean("joinable");
-					prefix = stringToNull(prefix);
-					suffix = stringToNull(suffix);
-					messageColour = stringToNull(messageColour);
-					Chat c = new Chat(chatID, name);
-					c.setPrefix(prefix);
-					c.setSuffix(suffix);
-					c.setMessageColour(messageColour);
-					c.setDisplayRank(displayRank);
-					c.setAlias(alias);
-					c.setAliasApproved(aliasApproved);
-					c.setJoinable(joinable);
-					if (c.getName().equals("GLOBAL")){
-						globalchat = c;
-						chat.log.info("Global chat loaded.");
-					}else{
-						chats.add(c);
-						chat.log.info("Chat: " + c.getName() + " loaded.");
-					}
-				}else{
-					//Next chat id
-				}
+			File folder = new File(chat.getDataFolder() + "/chats/");
+			if (!folder.exists()){
+				folder.mkdirs();
 			}
-		}else{
-			//No chats to load
+			List <File> files = Arrays.asList(folder.listFiles());
+			FileManager fm = null;
+			if (files.size() > 0){
+				chats = new LinkedList <Chat> ();
+				for (File f : files){
+					if (f.isFile()){
+						if (!f.getName().equalsIgnoreCase("next.yml")){
+							chat.log.info("Loading chat with id: " + f.getName());
+							fm = new FileManager(chat, "chats/", f.getName().substring(0, f.getName().length() - 4));
+							chat.log.info("Loading .yml: " + f.getName().substring(0, f.getName().length() - 4));
+							int chatID = fm.getYAML().getInt("chatID");
+							String name = fm.getYAML().getString("name");
+							String prefix = fm.getYAML().getString("prefix");
+							String suffix = fm.getYAML().getString("suffix");
+							String messageColour = fm.getYAML().getString("messageColour");
+							String listnull = null;
+							try{
+								listnull = fm.getYAML().getString("admins");
+							}catch(Exception e){
+								e.printStackTrace();
+							}
+							UUID uuid = null;
+							LinkedList <UUID> admins = new LinkedList <UUID> ();
+							if (listnull != null){
+								List <String> tempadmins = fm.getYAML().getStringList("admins");
+								for (String s : tempadmins){
+									uuid = UUID.fromString(s);
+									if (uuid != null){
+										admins.add(uuid);
+									}
+								}
+							}else{
+								
+							}
+							LinkedList <UUID> mods = new LinkedList <UUID> ();
+							if (listnull != null){
+								List <String> tempmods = fm.getYAML().getStringList("moderators");
+								for (String s : tempmods){
+									uuid = UUID.fromString(s);
+									if (uuid != null){
+										mods.add(uuid);
+									}
+								}
+							}else{
+								
+							}
+							boolean displayRank =  fm.getYAML().getBoolean("displayRank");
+							String alias = fm.getYAML().getString("alias");
+							boolean aliasApproved = fm.getYAML().getBoolean("aliasApproved");
+							boolean joinable = fm.getYAML().getBoolean("joinable");
+							prefix = stringToNull(prefix);
+							suffix = stringToNull(suffix);
+							messageColour = stringToNull(messageColour);
+							Chat c = new Chat(chatID, name);
+							c.setPrefix(prefix);
+							c.setSuffix(suffix);
+							c.setMessageColour(messageColour);
+							c.setAdmins(admins);
+							c.setModerators(mods);
+							c.setDisplayRank(displayRank);
+							c.setAlias(alias);
+							c.setAliasApproved(aliasApproved);
+							c.setJoinable(joinable);
+							chat.log.info(f.getName());
+							if (name.equals("GLOBAL")){
+								globalchat = c;
+								chat.log.info("Global chat loaded.");
+							}else{
+								chats.add(c);
+								chat.log.info("Chat: " + c.getName() + " loaded.");
+							}
+						}else{
+							//Next chat id
+						}
+					}else if (f.isDirectory()){
+						//Wut
+						chat.log.info("Directory: " + f.getAbsolutePath() + f.getName() + " is a directory and in the chats folder, why is it there?");
+					}
+				}
+			}else{
+				//No chats to load
+			}
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 	}
 	
@@ -330,7 +417,11 @@ public class ChatController {
 		//nullToString("");
 		FileManager fm = null;
 		for (Chat c : chats){
-			fm = new FileManager(chat, "chats/", c.getChatID() + "");
+			if (c.getName() != "GLOBAL"){
+				fm = new FileManager(chat, "chats/", c.getChatID() + "");
+			}else{
+				fm = new FileManager(chat, "chats/", "global");
+			}
 			if (!fm.exists()){
 				fm.createFile();
 			}
@@ -342,17 +433,63 @@ public class ChatController {
 			for (UUID uuid : c.getAdmins()){
 				list.add(uuid.toString());
 			}
-			fm.getYAML().set("admins", list);
+			if (list.size() > 0){
+				fm.getYAML().set("admins", list);
+			}else{
+				fm.getYAML().set("admins", nullToString(null));
+			}
 			for (UUID uuid : c.getModerators()){
 				list.add(uuid.toString());
 			}
-			fm.getYAML().set("moderators", list);
+			if (list.size() > 0){
+				fm.getYAML().set("moderators", list);
+			}else{
+				fm.getYAML().set("moderators", nullToString(null));
+			}
 			fm.getYAML().set("displayRank", c.getDisplayRank());
 			fm.getYAML().set("alias", c.getAlias());
 			fm.getYAML().set("aliasApproved", c.isAliasApproved());
 			fm.getYAML().set("joinable", c.isJoinable());
 			fm.saveYAML();
 		}
+	}
+	
+	public void saveChat(Chat c){
+		FileManager fm = null;
+		if (c.getName() != "GLOBAL"){
+			fm = new FileManager(chat, "chats/", c.getChatID() + "");
+		}else{
+			fm = new FileManager(chat, "chats/", "global");
+		}
+		if (!fm.exists()){
+			fm.createFile();
+		}
+		fm.getYAML().set("name", c.getName());
+		fm.getYAML().set("prefix", nullToString(c.getPrefix()));
+		fm.getYAML().set("suffix", nullToString(c.getSuffix()));
+		fm.getYAML().set("messageColour", nullToString(c.getMessageColour()));
+		LinkedList <String> list = new LinkedList <String> ();
+		for (UUID uuid : c.getAdmins()){
+			list.add(uuid.toString());
+		}
+		if (list.size() > 0){
+			fm.getYAML().set("admins", list);
+		}else{
+			fm.getYAML().set("admins", nullToString(null));
+		}
+		for (UUID uuid : c.getModerators()){
+			list.add(uuid.toString());
+		}
+		if (list.size() > 0){
+			fm.getYAML().set("moderators", list);
+		}else{
+			fm.getYAML().set("moderators", nullToString(null));
+		}
+		fm.getYAML().set("displayRank", c.getDisplayRank());
+		fm.getYAML().set("alias", c.getAlias());
+		fm.getYAML().set("aliasApproved", c.isAliasApproved());
+		fm.getYAML().set("joinable", c.isJoinable());
+		fm.saveYAML();
 	}
 	
 	public void loadChatter(UUID uuid){
@@ -437,6 +574,20 @@ public class ChatController {
 			return false;
 		}
 		return true;
+	}
+	
+	public void loadChatters(){
+		try{
+			for (Player p : chat.getServer().getOnlinePlayers()){
+				if (chatterIsOnFile(p.getUniqueId())){
+					this.loadChatter(p.getUniqueId());
+				}else{
+					chatters.add(new Chatter(p.getUniqueId(), globalchat));
+				}
+			}
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 }
