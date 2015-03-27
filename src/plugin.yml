@@ -3,10 +3,10 @@ main: net.mcviral.dev.plugins.comchat.main.ComChat
 version: 1.0
 author: comdude2
 commands:
-   pvp2:
+   chat:
       description: This is this plugin's main command.
       usage: /<command> help
-      permission: pvp.use
+      permission: chat.use
       permission-message: You don't have the required permission to perform this command.
 permissions:
     chat.*:
@@ -18,6 +18,7 @@ permissions:
             chat.create: true
             chat.delete: true
             chat.colour: true
+            chat.use: true
     chat.admin
         description: Gives chat admin permissions.
         default: op
@@ -33,3 +34,6 @@ permissions:
     chat.colour
         description: Allows the player to use colour codes in their message.
         default: false
+    chat.use
+        description: Allows usage of /chat
+        default: true

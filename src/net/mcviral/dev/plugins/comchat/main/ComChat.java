@@ -95,6 +95,7 @@ public class ComChat extends JavaPlugin{
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		//sender.sendMessage("");
+		//sender.sendMessage(ChatColor.RED + "Couldn't find you on file! What's going on? (Contact a warden)");
 		if (sender instanceof Player){
 			Player p = (Player) sender;
 			if (cmd.getName().equalsIgnoreCase("chat")) {
@@ -125,6 +126,7 @@ public class ComChat extends JavaPlugin{
 									}
 								}else{
 									//Can't find them
+									sender.sendMessage(ChatColor.RED + "Couldn't find you on file! What's going on? (Contact a warden)");
 								}
 							}else{
 								noPerms(sender);
@@ -161,15 +163,19 @@ public class ComChat extends JavaPlugin{
 											}
 										}else{
 											//They need an invite
+											sender.sendMessage(ChatColor.RED + "You can only join this chat if you're invited to do so.");
 										}
 									}else{
 										//What are they thinking...
+										sender.sendMessage(ChatColor.RED + "You're already in that chat you doofus.");
 									}
 								}else{
 									//Can't find chat.
+									sender.sendMessage(ChatColor.RED + "Couldn't find the specified chat, are you sure it exists?");
 								}
 							}else{
 								//can't find them.
+								sender.sendMessage(ChatColor.RED + "Couldn't find you on file! What's going on? (Contact a warden)");
 							}
 						}else if (args[0].equalsIgnoreCase("leave")){
 							Chatter chatter = this.getChatController().getChatter(p.getUniqueId());
@@ -193,22 +199,87 @@ public class ComChat extends JavaPlugin{
 												}
 											}
 											String msg = ChatColor.YELLOW + p.getName() + ChatColor.RED + " left the chat (" + c.getName() + ")";
-											log.info(p.getName() + " joined " + c.getName());
+											log.info(p.getName() + " left " + c.getName());
 											for (Player player : recipients){
 												player.sendMessage(msg);
 											}
 										}else{
 											//They can't leave global chat
+											sender.sendMessage(ChatColor.RED + "You cannot leave the global chat channel.");
 										}
 									}else{
 										//What are they thinking...
+										sender.sendMessage(ChatColor.RED + "You're not in that chat, therefore you cannot leave it.");
 									}
 								}else{
 									//Can't find chat.
+									sender.sendMessage(ChatColor.RED + "Couldn't find chat, are you sure it exists?");
 								}
 							}else{
 								//can't find them.
+								sender.sendMessage(ChatColor.RED + "Couldn't find you on file! What's going on? (Contact a warden)");
 							}
+						}else{
+							help(sender);
+						}
+					}else if (args.length == 3){
+						if (args[0].equalsIgnoreCase("kick")){
+							//<player> <chat>
+							Chatter chatter = this.getChatController().getChatter(p.getUniqueId());
+							if (chatter != null){
+								Chat c = this.getChatController().getChat(args[2]);
+								if (c != null){
+									if (p.hasPermission("chat.admin")){
+										//Admin of server
+									}else if (c.getAdmins().contains(chatter.getUuid())){
+										//Admin of that chat
+									}else{
+										noPerms(sender);
+										return true;
+									}
+									if (c != this.getChatController().getGlobalChat()){
+										Player player = this.getServer().getPlayer(args[1]);
+										if (player != null){
+											Chatter target = this.getChatController().getChatter(player.getUniqueId());
+											if (target != null){
+												if (target.getChats().contains(c)){
+													LinkedList <Chat> chats = target.getChats();
+													chats.remove(c);
+													target.setChats(chats);
+													p.sendMessage(ChatColor.RED + "You have been kicked from " + c.getName());
+													LinkedList <Player> recipients = new LinkedList <Player> ();
+													for (Chatter cter : this.getChatController().getChatters()){
+														if (cter.getChats().contains(c)){
+															player = this.getServer().getPlayer(cter.getUuid());
+															if (player != null){
+																recipients.add(player);
+															}
+														}
+													}
+													String msg = ChatColor.YELLOW + p.getName() + ChatColor.RED + " was kicked from the chat (" + c.getName() + ")";
+													log.info(p.getName() + " was kicked from " + c.getName());
+													for (Player p2 : recipients){
+														p2.sendMessage(msg);
+													}
+												}else{
+													//They're not in that chat.
+													sender.sendMessage(ChatColor.RED + "That person is not in the specified chat.");
+												}
+											}else{
+												//Couldn't find target's chatter object
+												sender.sendMessage(ChatColor.RED + "Couldn't find player.");
+											}
+										}else{
+											//Couldn't find target
+											sender.sendMessage(ChatColor.RED + "Couldn't find player.");
+										}
+									}else{
+										sender.sendMessage(ChatColor.RED + "You cannot kick someone from the global chat channel.");
+									}
+								}
+							}
+						}else if (args[0].equalsIgnoreCase("invite")){
+							//<player> <chat>
 						}else{
 							help(sender);
 						}
