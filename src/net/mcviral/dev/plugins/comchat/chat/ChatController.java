@@ -48,6 +48,7 @@ public class ChatController {
 		//globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 		saveDefaultGlobalChat();
 		loadChats();
+		loadGroups();
 		for (Player p : chat.getServer().getOnlinePlayers()){
 			loadChatter(p.getUniqueId());
 		}
@@ -64,13 +65,13 @@ public class ChatController {
 			}
 			String name = "GLOBAL";
 			fm.getYAML().set("chatID", 0);
-			fm.getYAML().set("name", nullToString(name));
-			fm.getYAML().set("prefix", nullToString("&aGLOBAL"));
-			fm.getYAML().set("suffix", nullToString(null));
-			fm.getYAML().set("messageColour", nullToString(null));
+			fm.getYAML().set("name", name);
+			fm.getYAML().set("prefix", null);
+			fm.getYAML().set("suffix", null);
+			fm.getYAML().set("messageColour", null);
 			//LinkedList <String> list = new LinkedList <String> ();
-			fm.getYAML().set("admins", nullToString(null));
-			fm.getYAML().set("moderators", nullToString(null));
+			fm.getYAML().set("admins", null);
+			fm.getYAML().set("moderators", null);
 			fm.getYAML().set("displayRank", true);
 			fm.getYAML().set("alias", "/gl");
 			fm.getYAML().set("aliasApproved", true);
@@ -183,67 +184,69 @@ public class ChatController {
 	
 	public String formatMessage(Player player, Chatter chatter, Chat c, String message){
 		String msg = "";
-		if ((c.getPrefix() != null) && (!c.getPrefix().contains("null"))){
-			msg = msg + colour(c.getPrefix()) + " ";
-		}
-		Group g = null;
 		if (c.getDisplayRank()){
-			g = this.getGroup(player);
-			if (g != null){
-				if (g.getPrefix() != null){
-					if (chatter.getPrefix() != null){
-						//chatter prefix
-						msg = msg + colour(chatter.getPrefix());
+			Group g = this.getGroup(player);
+			if (g == null){
+				g = new Group("DEFAULT");
+				g.setPrefix("&bDEFAULT");
+			}
+			if (c.getPrefix() != null){
+				msg += colour(c.getPrefix() + " ");
+			}
+			if (chatter.getPrefix() != null){
+				msg += colour(chatter.getPrefix() + " ");
+			}else if(g.getPrefix() != null){
+				msg += colour(g.getPrefix() + " ");
+			}
+			msg += colour("&f" + player.getDisplayName() + " ");
+			if (c.getSuffix() != null){
+				msg += colour(c.getSuffix() + " ");
+			}
+			if (chatter.getSuffix() != null){
+				msg += colour(chatter.getSuffix() + " ");
+			}else if(g.getSuffix() != null){
+				msg += colour(g.getSuffix() + " ");
+			}
+			msg += colour("&f: ");
+			if (c.getMessageColour() != null){
+				msg += colour(c.getMessageColour() + message);
+			}else{
+				if (chatter.getChatColour() != null){
+					msg += colour(chatter.getChatColour() + message);
+				}else if(g.getChatColour() != null){
+					msg += colour(g.getChatColour() + message);
+				}else{
+					if (player.hasPermission("chat.colour")){
+						msg += colour(message);
 					}else{
-						//rank prefix
-						msg = msg + colour(g.getPrefix());
+						msg += message;
 					}
 				}
-			}else{
-				//problem
 			}
-		}
-		msg = msg + player.getDisplayName() + colour("&f");
-		if (c.getDisplayRank()){
-			if (g != null){
-				if (g.getSuffix() != null){
-					if (chatter.getSuffix() != null){
-						//chatter suffix
-						msg = msg + colour(chatter.getSuffix());
-					}else{
-						//rank suffix
-						msg = msg + colour(g.getSuffix());
-					}
-				}
-			}else{
-				//problem
-			}
-		}
-		if ((c.getSuffix() != null) && (!c.getSuffix().contains("null"))){
-			msg = msg + colour(" " + c.getSuffix());
-		}
-		msg = msg + colour("&f: ");
-		if ((c.getMessageColour() != null) && (!c.getMessageColour().contains("null"))){
-			msg = msg + c.getMessageColour() + message;
 		}else{
-			if ((chatter.getChatColour() != null) && (!chatter.getChatColour().contains("null"))){
-				msg = msg + colour(chatter.getChatColour());
+			if (c.getPrefix() != null){
+				msg += colour(c.getPrefix() + " ");
+			}
+			if (chatter.getPrefix() != null){
+				msg += colour(chatter.getPrefix() + " ");
+			}
+			msg += colour("&f" + player.getDisplayName() + " ");
+			if (c.getSuffix() != null){
+				msg += colour(c.getSuffix() + " ");
+			}
+			if (chatter.getSuffix() != null){
+				msg += colour(chatter.getSuffix() + " ");
+			}
+			msg += colour("&f: ");
+			if (c.getMessageColour() != null){
+				msg += colour(c.getMessageColour() + message);
 			}else{
-				if (c.getDisplayRank()){
-					if (g != null){
-						if (g.getChatColour() != null){
-							msg = msg + colour(g.getChatColour());
-						}
-					}
+				if (chatter.getChatColour() != null){
+					msg += colour(chatter.getChatColour() + message);
 				}
 			}
-			if (player.hasPermission("chat.colour")){
-				msg = msg + colour(message);
-			}else{
-				msg = msg + message;
-			}
 		}
-		//chat.getServer().getConsoleSender().sendMessage(msg);
+		
 		return msg;
 	}
 	
@@ -367,9 +370,9 @@ public class ChatController {
 							chat.log.info("Loading .yml: " + f.getName().substring(0, f.getName().length() - 4));
 							int chatID = fm.getYAML().getInt("chatID");
 							String name = fm.getYAML().getString("name");
-							String prefix = stringToNull(fm.getYAML().getString("prefix"));
-							String suffix = stringToNull(fm.getYAML().getString("suffix"));
-							String messageColour = stringToNull(fm.getYAML().getString("messageColour"));
+							String prefix = fm.getYAML().getString("prefix");
+							String suffix = fm.getYAML().getString("suffix");
+							String messageColour = fm.getYAML().getString("messageColour");
 							String listnull = null;
 							try{
 								listnull = fm.getYAML().getString("admins");
@@ -405,9 +408,6 @@ public class ChatController {
 							String alias = fm.getYAML().getString("alias");
 							boolean aliasApproved = fm.getYAML().getBoolean("aliasApproved");
 							boolean joinable = fm.getYAML().getBoolean("joinable");
-							prefix = stringToNull(prefix);
-							suffix = stringToNull(suffix);
-							messageColour = stringToNull(messageColour);
 							Chat c = new Chat(chatID, name);
 							c.setPrefix(prefix);
 							c.setSuffix(suffix);
@@ -442,19 +442,19 @@ public class ChatController {
 		}
 	}
 	
-	private String stringToNull(String s){
-		if ((s == "null") || (s.equals("null")) || (s.contains("null"))){
-			s = null;
-		}
-		return s;
-	}
+	//private String stringToNull(String s){
+		//if (s.startsWith("null")){
+			//s = null;
+		//}
+		//return s;
+	//}
 	
-	private String nullToString(String s){
-		if (s == null){
-			s = "null";
-		}
-		return s;
-	}
+	//private String nullToString(String s){
+		//if (s == null){
+			//s = "null";
+		//}
+		//return s;
+	//}
 	
 	public void saveChats(){
 		//nullToString("");
@@ -469,9 +469,9 @@ public class ChatController {
 				fm.createFile();
 			}
 			fm.getYAML().set("name", c.getName());
-			fm.getYAML().set("prefix", nullToString(c.getPrefix()));
-			fm.getYAML().set("suffix", nullToString(c.getSuffix()));
-			fm.getYAML().set("messageColour", nullToString(c.getMessageColour()));
+			fm.getYAML().set("prefix", c.getPrefix());
+			fm.getYAML().set("suffix", c.getSuffix());
+			fm.getYAML().set("messageColour", c.getMessageColour());
 			LinkedList <String> list = new LinkedList <String> ();
 			for (UUID uuid : c.getAdmins()){
 				list.add(uuid.toString());
@@ -479,7 +479,7 @@ public class ChatController {
 			if (list.size() > 0){
 				fm.getYAML().set("admins", list);
 			}else{
-				fm.getYAML().set("admins", nullToString(null));
+				fm.getYAML().set("admins", null);
 			}
 			for (UUID uuid : c.getModerators()){
 				list.add(uuid.toString());
@@ -487,7 +487,7 @@ public class ChatController {
 			if (list.size() > 0){
 				fm.getYAML().set("moderators", list);
 			}else{
-				fm.getYAML().set("moderators", nullToString(null));
+				fm.getYAML().set("moderators", null);
 			}
 			fm.getYAML().set("displayRank", c.getDisplayRank());
 			fm.getYAML().set("alias", c.getAlias());
@@ -508,9 +508,9 @@ public class ChatController {
 			fm.createFile();
 		}
 		fm.getYAML().set("name", c.getName());
-		fm.getYAML().set("prefix", nullToString(c.getPrefix()));
-		fm.getYAML().set("suffix", nullToString(c.getSuffix()));
-		fm.getYAML().set("messageColour", nullToString(c.getMessageColour()));
+		fm.getYAML().set("prefix", c.getPrefix());
+		fm.getYAML().set("suffix", c.getSuffix());
+		fm.getYAML().set("messageColour", c.getMessageColour());
 		LinkedList <String> list = new LinkedList <String> ();
 		for (UUID uuid : c.getAdmins()){
 			list.add(uuid.toString());
@@ -518,7 +518,7 @@ public class ChatController {
 		if (list.size() > 0){
 			fm.getYAML().set("admins", list);
 		}else{
-			fm.getYAML().set("admins", nullToString(null));
+			fm.getYAML().set("admins", null);
 		}
 		for (UUID uuid : c.getModerators()){
 			list.add(uuid.toString());
@@ -526,7 +526,7 @@ public class ChatController {
 		if (list.size() > 0){
 			fm.getYAML().set("moderators", list);
 		}else{
-			fm.getYAML().set("moderators", nullToString(null));
+			fm.getYAML().set("moderators", null);
 		}
 		fm.getYAML().set("displayRank", c.getDisplayRank());
 		fm.getYAML().set("alias", c.getAlias());
@@ -549,9 +549,9 @@ public class ChatController {
 					}
 				}
 			}
-			String prefix = stringToNull(fm.getYAML().getString("prefix"));
-			String suffix = stringToNull(fm.getYAML().getString("suffix"));
-			String chatColour = stringToNull(fm.getYAML().getString("chatColour"));
+			String prefix = fm.getYAML().getString("prefix");
+			String suffix = fm.getYAML().getString("suffix");
+			String chatColour = fm.getYAML().getString("chatColour");
 			boolean muted = fm.getYAML().getBoolean("muted");
 			long mutedUntil = fm.getYAML().getLong("mutedUntil");
 			boolean spy = fm.getYAML().getBoolean("spy");
@@ -594,9 +594,9 @@ public class ChatController {
 			chatids.add(c.getChatID());
 		}
 		fm.getYAML().set("chats", chatids);
-		fm.getYAML().set("prefix", nullToString(chatter.getPrefix()));
-		fm.getYAML().set("suffix", nullToString(chatter.getSuffix()));
-		fm.getYAML().set("chatColour", nullToString(chatter.getChatColour()));
+		fm.getYAML().set("prefix", chatter.getPrefix());
+		fm.getYAML().set("suffix", chatter.getSuffix());
+		fm.getYAML().set("chatColour", chatter.getChatColour());
 		fm.getYAML().set("muted", chatter.isMuted());
 		fm.getYAML().set("mutedUntil", chatter.getMutedUntil());
 		fm.getYAML().set("spy", chatter.getSpy());
@@ -655,13 +655,13 @@ public class ChatController {
 				if (name == null){
 					done = true;
 				}else{
-					int position = fm.getYAML().getInt(i + ".position");
-					String prefix = stringToNull(fm.getYAML().getString(i + ".prefix"));
-					String suffix = stringToNull(fm.getYAML().getString(i + ".suffix"));
+					String prefix = fm.getYAML().getString(i + ".prefix");
+					String suffix = fm.getYAML().getString(i + ".suffix");
+					String chatColour = fm.getYAML().getString(i + ".chatColour");
 					Group g = new Group(name);
-					g.setPosition(position);
 					g.setPrefix(prefix);
 					g.setSuffix(suffix);
+					g.setChatColour(chatColour);
 					groups.add(g);
 				}
 				i++;
@@ -679,19 +679,24 @@ public class ChatController {
 		}
 		int i = 1;
 		for (Group g : groups){
+			chat.log.info("Saving group: " + g.getName());
 			fm.getYAML().set(i + ".name", g.getName());
-			fm.getYAML().set(i + ".position", g.getPosition());
 			fm.getYAML().set(i + ".prefix", g.getPrefix());
 			fm.getYAML().set(i + ".suffix", g.getSuffix());
+			fm.getYAML().set(i + ".chatColour", g.getChatColour());
+			i++;
 		}
 		fm.saveYAML();
 	}
 	
 	public Group getGroup(Player p){
 		for (Group g : groups){
+			//chat.log.info("Does user have chat.group." + g.getName() + "?");
 			if (p.hasPermission("chat.group." + g.getName())){
+				//chat.log.info("Yes");
 				return g;
 			}
+			//chat.log.info("No");
 		}
 		return null;
 	}

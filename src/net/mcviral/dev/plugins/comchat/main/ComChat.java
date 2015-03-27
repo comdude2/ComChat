@@ -54,6 +54,7 @@ public class ComChat extends JavaPlugin{
 	public void onDisable(){
 		this.getChatController().saveChats();
 		this.getChatController().saveChatters();
+		this.getChatController().saveGroups();
 		listeners.unregister();
 		this.getLogger().info(this.getDescription().getName() + " Disabled!");
 	}
@@ -62,6 +63,7 @@ public class ComChat extends JavaPlugin{
 		try{
 			this.getChatController().saveChats();
 			this.getChatController().saveChatters();
+			this.getChatController().saveGroups();
 			listeners.unregister();
 			this.getLogger().info(this.getDescription().getName() + " Disabled!");
 			this.saveDefaultConfig();

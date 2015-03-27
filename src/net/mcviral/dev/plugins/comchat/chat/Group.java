@@ -3,7 +3,6 @@ package net.mcviral.dev.plugins.comchat.chat;
 public class Group {
 	
 	private String name = null;
-	private int position = -1;
 	private String prefix = null;
 	private String suffix = null;
 	private String chatColour = null;
@@ -18,14 +17,6 @@ public class Group {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public int getPosition() {
-		return position;
-	}
-
-	public void setPosition(int position) {
-		this.position = position;
 	}
 
 	public String getPrefix() {
