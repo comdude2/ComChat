@@ -20,8 +20,8 @@ public class ChatController {
 	
 	public ChatController(ComChat chat){
 		this.chat = chat;
-		//globalchat = new Chat(0, "GLOBAL");
-		//globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
+		globalchat = new Chat(0, "GLOBAL");
+		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 	}
 	
 	//Chat methods that chat in the right channel
@@ -66,14 +66,14 @@ public class ChatController {
 	public String formatMessage(Player player, Chatter chatter, Chat c, String message){
 		String msg = "";
 		if (c.getPrefix() != null){
-			msg = msg + c.getPrefix() + " ";
+			msg = msg + colour(c.getPrefix()) + " ";
 		}
 		//if (c.getDisplayRank()){
 			//msg = msg + c.getPrefix();
 		//}
 		msg = msg + player.getDisplayName() + " ";
 		if (c.getSuffix() != null){
-			msg = msg + c.getSuffix();
+			msg = msg + colour(c.getSuffix());
 		}
 		msg = msg + colour(" &f: ");
 		if (c.getMessageColour() != null){
@@ -191,14 +191,15 @@ public class ChatController {
 	private String stringToNull(String s){
 		if (s == "null"){
 			s = null;
-		}else{
-			colour(s);
 		}
 		return s;
 	}
 	
 	private String nullToString(String s){
-		return null;
+		if (s == null){
+			s = "null";
+		}
+		return s;
 	}
 	
 	public void saveChats(){
@@ -230,12 +231,27 @@ public class ChatController {
 			chatter.setMutedUntil(mutedUntil);
 			chatters.add(chatter);
 		}else{
-			
+			Chatter chatter = new Chatter(uuid, globalchat);
+			chatter.setPrefix(null);
+			chatter.setSuffix(null);
+			chatter.setMuted(false);
+			chatter.setMutedUntil(0L);
+			chatters.add(chatter);
 		}
 	}
 	
-	public void saveChatter(UUID uuid){
-		
+	public void saveChatter(Chatter chatter){
+		FileManager fm = new FileManager(chat, "chatters/", chatter.getUuid().toString());
+		LinkedList <Integer> chatids = new LinkedList <Integer> ();
+		for (Chat c : chatter.getChats()){
+			chatids.add(c.getChatID());
+		}
+		fm.getYAML().set("chats", chatids);
+		fm.getYAML().set("prefix", nullToString(chatter.getPrefix()));
+		fm.getYAML().set("suffix", nullToString(chatter.getSuffix()));
+		fm.getYAML().set("muted", chatter.isMuted());
+		fm.getYAML().set("mutedUntil", chatter.getMutedUntil());
+		fm.saveYAML();
 	}
 	
 }
