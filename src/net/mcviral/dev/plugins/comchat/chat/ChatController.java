@@ -1,6 +1,27 @@
+/*
+ComChat - A chat plugin for Minecraft servers
+Copyright (C) 2015  comdude2 (Matt Armer)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Contact: admin@mcviral.net
+*/
+
 package net.mcviral.dev.plugins.comchat.chat;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +43,7 @@ public class ChatController {
 		this.chat = chat;
 		globalchat = new Chat(0, "GLOBAL");
 		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
+		loadChats();
 	}
 	
 	//Chat methods that chat in the right channel
@@ -71,11 +93,11 @@ public class ChatController {
 		//if (c.getDisplayRank()){
 			//msg = msg + c.getPrefix();
 		//}
-		msg = msg + player.getDisplayName() + " ";
+		msg = msg + player.getDisplayName();
 		if (c.getSuffix() != null){
-			msg = msg + colour(c.getSuffix());
+			msg = msg + colour(" " + c.getSuffix());
 		}
-		msg = msg + colour(" &f: ");
+		msg = msg + colour("&f: ");
 		if (c.getMessageColour() != null){
 			msg = msg + c.getMessageColour() + message;
 		}else{
@@ -144,6 +166,7 @@ public class ChatController {
 			chats = new LinkedList <Chat> ();
 			for (File f : files){
 				if (!f.getName().equalsIgnoreCase("next.yml")){
+					chat.log.info("Loading chat with id: " + f.getName());
 					fm = new FileManager(chat, "chats/", f.getName().substring(0, f.getName().length() - 5));
 					int chatID = fm.getYAML().getInt("chatID");
 					String name = fm.getYAML().getString("name");
@@ -183,8 +206,12 @@ public class ChatController {
 						chats.add(c);
 						chat.log.info("Chat: " + c.getName() + " loaded.");
 					}
+				}else{
+					//Next chat id
 				}
 			}
+		}else{
+			//No chats to load
 		}
 	}
 	
@@ -207,6 +234,7 @@ public class ChatController {
 	}
 	
 	public void loadChatter(UUID uuid){
+		chat.log.info("Loading chatter: " + uuid.toString());
 		FileManager fm = new FileManager(chat, "chatters/", uuid.toString());
 		if (fm.exists()){
 			List <Integer> chatids = fm.getYAML().getIntegerList("chats");
@@ -238,9 +266,21 @@ public class ChatController {
 			chatter.setMutedUntil(0L);
 			chatters.add(chatter);
 		}
+		chat.log.info("Loaded chatter.");
 	}
 	
 	public void saveChatter(Chatter chatter){
+		chat.log.info("Saving chatter: " + chatter.getUuid().toString());
+		File folder = new File(chat.getDataFolder() + "/chatters/" + chatter.getUuid().toString() + ".yml");
+		if (!folder.exists()){
+			try {
+				folder.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+		}
 		FileManager fm = new FileManager(chat, "chatters/", chatter.getUuid().toString());
 		LinkedList <Integer> chatids = new LinkedList <Integer> ();
 		for (Chat c : chatter.getChats()){
@@ -252,6 +292,25 @@ public class ChatController {
 		fm.getYAML().set("muted", chatter.isMuted());
 		fm.getYAML().set("mutedUntil", chatter.getMutedUntil());
 		fm.saveYAML();
+		chat.log.info("Saved chatter.");
+	}
+	
+	public void saveChatters(){
+		for (Chatter c : chatters){
+			try{
+				saveChatter(c);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public boolean chatterIsOnFile(UUID uuid){
+		File file = new File(chat.getDataFolder() + "/chatters/" + uuid.toString() + ".yml");
+		if (!file.exists()){
+			return false;
+		}
+		return true;
 	}
 	
 }
