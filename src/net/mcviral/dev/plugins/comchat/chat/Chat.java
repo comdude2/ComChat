@@ -33,6 +33,9 @@ public class Chat {
 	private LinkedList <UUID> admins = new LinkedList <UUID> ();
 	private LinkedList <UUID> moderators = new LinkedList <UUID> ();
 	private boolean displayRank = false;
+	private String alias = null;
+	private boolean aliasApproved = false;
+	private boolean joinable = false;
 	
 	public Chat(int chatID, String name){
 		this.setChatID(chatID);
@@ -101,6 +104,30 @@ public class Chat {
 
 	public void setDisplayRank(boolean displayRank) {
 		this.displayRank = displayRank;
+	}
+
+	public String getAlias() {
+		return alias;
+	}
+
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
+
+	public boolean isAliasApproved() {
+		return aliasApproved;
+	}
+
+	public void setAliasApproved(boolean aliasApproved) {
+		this.aliasApproved = aliasApproved;
+	}
+
+	public boolean isJoinable() {
+		return joinable;
+	}
+
+	public void setJoinable(boolean joinable) {
+		this.joinable = joinable;
 	}
 	
 }

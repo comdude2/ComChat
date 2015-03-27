@@ -2,3 +2,34 @@ name: ComChat
 main: net.mcviral.dev.plugins.comchat.main.ComChat
 version: 1.0
 author: comdude2
+commands:
+   pvp2:
+      description: This is this plugin's main command.
+      usage: /<command> help
+      permission: pvp.use
+      permission-message: You don't have the required permission to perform this command.
+permissions:
+    chat.*:
+        description: Gives access to all chat commands.
+        default: op
+        children:
+            chat.admin: true
+            chat.spy: true
+            chat.create: true
+            chat.delete: true
+            chat.colour: true
+    chat.admin
+        description: Gives chat admin permissions.
+        default: op
+    chat.spy
+        description: Allows the player to view private messages.
+        default: false
+    chat.create
+        description: Allows the player to create chats (Channels).
+        default: true
+    chat.delete
+        description: Allows the player to delete chats (Channels).
+        default: false
+    chat.colour
+        description: Allows the player to use colour codes in their message.
+        default: false

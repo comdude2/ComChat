@@ -32,6 +32,7 @@ public class Chatter {
 	private String suffix = null;
 	private boolean muted = false;
 	private long mutedUntil = 0L;
+	private boolean spy = false;
 	
 	public Chatter(UUID uuid, Chat focus){
 		this.uuid = uuid;
@@ -88,6 +89,14 @@ public class Chatter {
 
 	public void setMutedUntil(long mutedUntil) {
 		this.mutedUntil = mutedUntil;
+	}
+
+	public boolean getSpy() {
+		return spy;
+	}
+
+	public void setSpy(boolean spy) {
+		this.spy = spy;
 	}
 	
 }

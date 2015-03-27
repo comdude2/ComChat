@@ -21,10 +21,17 @@ Contact: admin@mcviral.net
 package net.mcviral.dev.plugins.comchat.main;
 
 import java.io.File;
+import java.util.LinkedList;
 
+import net.mcviral.dev.plugins.comchat.chat.Chat;
 import net.mcviral.dev.plugins.comchat.chat.ChatController;
+import net.mcviral.dev.plugins.comchat.chat.Chatter;
 import net.mcviral.dev.plugins.comchat.util.Log;
+import net.md_5.bungee.api.ChatColor;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ComChat extends JavaPlugin{
@@ -33,22 +40,41 @@ public class ComChat extends JavaPlugin{
 	private ChatController chatcontroller = null;
 	public Log log = null;
 	
-	private boolean loadedBefore = false;
-	
 	public void onEnable(){
 		this.saveDefaultConfig();
 		setupFolders();
 		log = new Log(this.getDescription().getName());
 		listeners = new Listeners(this);
+		listeners.register();
 		chatcontroller = new ChatController(this);
-		if(!loadedBefore){
-			this.getServer().getPluginManager().registerEvents(listeners, this);
-		}
 		this.getLogger().info(this.getDescription().getName() + " Enabled!");
 	}
 	
 	public void onDisable(){
+		this.getChatController().saveChats();
+		this.getChatController().saveChatters();
+		listeners.unregister();
 		this.getLogger().info(this.getDescription().getName() + " Disabled!");
+	}
+	
+	public boolean reload(){
+		try{
+			this.getChatController().saveChats();
+			this.getChatController().saveChatters();
+			listeners.unregister();
+			this.getLogger().info(this.getDescription().getName() + " Disabled!");
+			this.saveDefaultConfig();
+			setupFolders();
+			log = new Log(this.getDescription().getName());
+			listeners = new Listeners(this);
+			listeners.register();
+			chatcontroller = new ChatController(this);
+			this.getLogger().info(this.getDescription().getName() + " Enabled!");
+			return true;
+		}catch(Exception e){
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	public void setupFolders(){
@@ -64,6 +90,146 @@ public class ComChat extends JavaPlugin{
 	
 	public ChatController getChatController(){
 		return chatcontroller;
+	}
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		//sender.sendMessage("");
+		if (sender instanceof Player){
+			Player p = (Player) sender;
+			if (cmd.getName().equalsIgnoreCase("chat")) {
+				if (args.length > 0){
+					if (args.length == 1){
+						if (args[0].equalsIgnoreCase("reload")){
+							if (sender.hasPermission("chat.admin")){
+								boolean done = reload();
+								if (done){
+									sender.sendMessage(ChatColor.GREEN + "Reloaded!");
+								}else{
+									sender.sendMessage(ChatColor.RED + "Reload failed, see console for more details.");
+								}
+							}else{
+								//no perms
+								noPerms(sender);
+							}
+						}else if (args[0].equalsIgnoreCase("spy")){
+							if (sender.hasPermission("chat.spy")){
+								Chatter chatter = this.getChatController().getChatter(p.getUniqueId());
+								if (chatter != null){
+									if (chatter.getSpy()){
+										chatter.setSpy(false);
+										sender.sendMessage(ChatColor.YELLOW + "Your chat spy is now disabled.");
+									}else{
+										chatter.setSpy(true);
+										sender.sendMessage(ChatColor.YELLOW + "Your chat spy is now enabled.");
+									}
+								}else{
+									//Can't find them
+								}
+							}else{
+								noPerms(sender);
+							}
+						}else{
+							help(sender);
+						}
+					}else if (args.length == 2){
+						if (args[0].equalsIgnoreCase("join")){
+							Chatter chatter = this.getChatController().getChatter(p.getUniqueId());
+							if (chatter != null){
+								Chat c = this.getChatController().getChat(args[1]);
+								if (c != null){
+									if (!chatter.getChats().contains(c)){
+										if (c.isJoinable()){
+											LinkedList <Chat> chats = chatter.getChats();
+											chats.add(c);
+											chatter.setChats(chats);
+											//Added - Notify members
+											p.sendMessage(ChatColor.GREEN + "You have joined " + c.getName());
+											LinkedList <Player> recipients = new LinkedList <Player> ();
+											for (Chatter cter : this.getChatController().getChatters()){
+												if (cter.getChats().contains(c)){
+													Player player = this.getServer().getPlayer(cter.getUuid());
+													if (player != null){
+														recipients.add(player);
+													}
+												}
+											}
+											String msg = ChatColor.YELLOW + p.getName() + ChatColor.GREEN + " joined the chat (" + c.getName() + ")";
+											log.info(p.getName() + " joined " + c.getName());
+											for (Player player : recipients){
+												player.sendMessage(msg);
+											}
+										}else{
+											//They need an invite
+										}
+									}else{
+										//What are they thinking...
+									}
+								}else{
+									//Can't find chat.
+								}
+							}else{
+								//can't find them.
+							}
+						}else if (args[0].equalsIgnoreCase("leave")){
+							Chatter chatter = this.getChatController().getChatter(p.getUniqueId());
+							if (chatter != null){
+								Chat c = this.getChatController().getChat(args[1]);
+								if (c != null){
+									if (chatter.getChats().contains(c)){
+										if (!c.getName().equals("GLOBAL")){
+											LinkedList <Chat> chats = chatter.getChats();
+											chats.remove(c);
+											chatter.setChats(chats);
+											//Left - Notify members
+											p.sendMessage(ChatColor.RED + "You have left " + c.getName());
+											LinkedList <Player> recipients = new LinkedList <Player> ();
+											for (Chatter cter : this.getChatController().getChatters()){
+												if (cter.getChats().contains(c)){
+													Player player = this.getServer().getPlayer(cter.getUuid());
+													if (player != null){
+														recipients.add(player);
+													}
+												}
+											}
+											String msg = ChatColor.YELLOW + p.getName() + ChatColor.RED + " left the chat (" + c.getName() + ")";
+											log.info(p.getName() + " joined " + c.getName());
+											for (Player player : recipients){
+												player.sendMessage(msg);
+											}
+										}else{
+											//They can't leave global chat
+										}
+									}else{
+										//What are they thinking...
+									}
+								}else{
+									//Can't find chat.
+								}
+							}else{
+								//can't find them.
+							}
+						}else{
+							help(sender);
+						}
+					}else{
+						help(sender);
+					}
+				}else{
+					help(sender);
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void help(CommandSender sender){
+		
+	}
+	
+	public void noPerms(CommandSender sender){
+		sender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
 	}
 	
 }

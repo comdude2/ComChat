@@ -20,12 +20,14 @@ Contact: admin@mcviral.net
 
 package net.mcviral.dev.plugins.comchat.main;
 
+import net.mcviral.dev.plugins.comchat.chat.Chat;
 import net.mcviral.dev.plugins.comchat.chat.Chatter;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -36,6 +38,37 @@ public class Listeners implements Listener{
 	
 	public Listeners(ComChat chat){
 		this.chat = chat;
+	}
+	
+	public void register(){
+		chat.getServer().getPluginManager().registerEvents(this, chat);
+	}
+	
+	public void unregister(){
+		//Unregister all events
+		PlayerCommandPreprocessEvent.getHandlerList().unregister(this);
+		AsyncPlayerChatEvent.getHandlerList().unregister(this);
+		PlayerJoinEvent.getHandlerList().unregister(this);
+		PlayerQuitEvent.getHandlerList().unregister(this);
+		PlayerKickEvent.getHandlerList().unregister(this);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onCommandPreProcess(PlayerCommandPreprocessEvent event){
+		for (Chat c : chat.getChatController().getChats()){
+			if (event.getMessage().startsWith(c.getAlias() + " ")){
+				//Forward to that chat
+				event.setCancelled(true);
+				Chatter chatter = chat.getChatController().getChatter(event.getPlayer().getUniqueId());
+				if (chatter != null){
+					String message = event.getMessage().substring(c.getAlias().length(), event.getMessage().length() - 1);//no -1 on alias length as we need to remove the space too.
+					chat.getChatController().chatInDifferentToFocus(event.getPlayer(), chatter, c, message);
+				}else{
+					return;
+				}
+				break;
+			}
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)

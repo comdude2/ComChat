@@ -41,6 +41,8 @@ public class ChatController {
 	
 	public ChatController(ComChat chat){
 		this.chat = chat;
+		this.chats = new LinkedList <Chat> ();
+		this.chatters = new LinkedList <Chatter> ();
 		globalchat = new Chat(0, "GLOBAL");
 		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 		loadChats();
@@ -54,37 +56,83 @@ public class ChatController {
 	public void chat(Player player, String message){
 		Chatter chatter = getChatter(player.getUniqueId());
 		if (chatter != null){
-			Chat chatToSend = chatter.getFocus();
-			LinkedList <Player> recipients = new LinkedList <Player> ();
-			if (chatToSend == globalchat){
-				for (Chatter c : chatters){
-					Player p = chat.getServer().getPlayer(c.getUuid());
-					if (p != null){
-						recipients.add(p);
-					}
-				}
-				String msg = formatMessage(player, chatter, chatToSend, message);
-				chat.log.info(player.getName() + ": " + message);
-				for (Player p : recipients){
-					p.sendMessage(msg);
-				}
-			}else{
-				for (Chatter c : chatters){
-					if (c.getChats().contains(chatToSend)){
+			if (!chatter.isMuted()){
+				Chat chatToSend = chatter.getFocus();
+				LinkedList <Player> recipients = new LinkedList <Player> ();
+				if (chatToSend == globalchat){
+					for (Chatter c : chatters){
 						Player p = chat.getServer().getPlayer(c.getUuid());
 						if (p != null){
 							recipients.add(p);
 						}
 					}
+					String msg = formatMessage(player, chatter, chatToSend, message);
+					chat.log.info(player.getName() + ": " + message);
+					for (Player p : recipients){
+						p.sendMessage(msg);
+					}
+				}else{
+					for (Chatter c : chatters){
+						if (c.getChats().contains(chatToSend)){
+							Player p = chat.getServer().getPlayer(c.getUuid());
+							if (p != null){
+								recipients.add(p);
+							}
+						}
+					}
+					String msg = formatMessage(player, chatter, chatToSend, message);
+					chat.log.info(player.getName() + ": " + message);
+					for (Player p : recipients){
+						p.sendMessage(msg);
+					}
 				}
-				String msg = formatMessage(player, chatter, chatToSend, message);
-				chat.log.info(player.getName() + ": " + message);
-				for (Player p : recipients){
-					p.sendMessage(msg);
-				}
+			}else{
+				//Muted
 			}
 		}else{
 			//Failed to send message.
+		}
+	}
+	
+	public void chatInDifferentToFocus(Player player, Chatter chatter, Chat targetChat, String message){
+		if (!chatter.isMuted()){
+			if (chatter.getChats().contains(targetChat)){
+				LinkedList <Player> recipients = new LinkedList <Player> ();
+				if (targetChat == globalchat){
+					//Global
+					for (Chatter c : chatters){
+						Player p = chat.getServer().getPlayer(c.getUuid());
+						if (p != null){
+							recipients.add(p);
+						}
+					}
+					String msg = formatMessage(player, chatter, targetChat, message);
+					chat.log.info(player.getName() + ": " + message);
+					for (Player p : recipients){
+						p.sendMessage(msg);
+					}
+				}else{
+					//Not global
+					for (Chatter c : chatters){
+						if (c.getChats().contains(targetChat)){
+							Player p = chat.getServer().getPlayer(c.getUuid());
+							if (p != null){
+								recipients.add(p);
+							}
+						}
+					}
+					String msg = formatMessage(player, chatter, targetChat, message);
+					chat.log.info(player.getName() + ": " + message);
+					for (Player p : recipients){
+						p.sendMessage(msg);
+					}
+				}
+			}else{
+				//U wot m8
+				
+			}
+		}else{
+			//Muted
 		}
 	}
 	
@@ -104,13 +152,22 @@ public class ChatController {
 		if (c.getMessageColour() != null){
 			msg = msg + c.getMessageColour() + message;
 		}else{
-			if (player.hasPermission("cc.colour")){
+			if (player.hasPermission("chat.colour")){
 				msg = msg + colour(message);
 			}else{
 				msg = msg + message;
 			}
 		}
 		return msg;
+	}
+	
+	public Chat getChat(String name){
+		for (Chat c : chats){
+			if (c.getName().equalsIgnoreCase(name)){
+				return c;
+			}
+		}
+		return null;
 	}
 	
 	public Chatter getChatter(UUID uuid){
@@ -194,6 +251,9 @@ public class ChatController {
 						}
 					}
 					boolean displayRank =  fm.getYAML().getBoolean("displayRank");
+					String alias = fm.getYAML().getString("alias");
+					boolean aliasApproved = fm.getYAML().getBoolean("aliasApproved");
+					boolean joinable = fm.getYAML().getBoolean("joinable");
 					prefix = stringToNull(prefix);
 					suffix = stringToNull(suffix);
 					messageColour = stringToNull(messageColour);
@@ -202,6 +262,9 @@ public class ChatController {
 					c.setSuffix(suffix);
 					c.setMessageColour(messageColour);
 					c.setDisplayRank(displayRank);
+					c.setAlias(alias);
+					c.setAliasApproved(aliasApproved);
+					c.setJoinable(joinable);
 					if (c.getName().equals("GLOBAL")){
 						globalchat = c;
 						chat.log.info("Global chat loaded.");
@@ -254,6 +317,9 @@ public class ChatController {
 			}
 			fm.getYAML().set("moderators", list);
 			fm.getYAML().set("displayRank", c.getDisplayRank());
+			fm.getYAML().set("alias", c.getAlias());
+			fm.getYAML().set("aliasApproved", c.isAliasApproved());
+			fm.getYAML().set("joinable", c.isJoinable());
 			fm.saveYAML();
 		}
 	}
@@ -276,12 +342,14 @@ public class ChatController {
 			String suffix = stringToNull(fm.getYAML().getString("suffix"));
 			boolean muted = fm.getYAML().getBoolean("muted");
 			long mutedUntil = fm.getYAML().getLong("mutedUntil");
+			boolean spy = fm.getYAML().getBoolean("spy");
 			Chatter chatter = new Chatter(uuid, globalchat);
 			chatter.setChats(chatterchats);
 			chatter.setPrefix(prefix);
 			chatter.setSuffix(suffix);
 			chatter.setMuted(muted);
 			chatter.setMutedUntil(mutedUntil);
+			chatter.setSpy(spy);
 			chatters.add(chatter);
 		}else{
 			Chatter chatter = new Chatter(uuid, globalchat);
@@ -289,6 +357,7 @@ public class ChatController {
 			chatter.setSuffix(null);
 			chatter.setMuted(false);
 			chatter.setMutedUntil(0L);
+			chatter.setSpy(false);
 			chatters.add(chatter);
 		}
 		chat.log.info("Loaded chatter.");
@@ -316,6 +385,7 @@ public class ChatController {
 		fm.getYAML().set("suffix", nullToString(chatter.getSuffix()));
 		fm.getYAML().set("muted", chatter.isMuted());
 		fm.getYAML().set("mutedUntil", chatter.getMutedUntil());
+		fm.getYAML().set("spy", chatter.getSpy());
 		fm.saveYAML();
 		chat.log.info("Saved chatter.");
 	}
