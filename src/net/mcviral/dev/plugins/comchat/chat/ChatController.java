@@ -43,12 +43,43 @@ public class ChatController {
 		this.chat = chat;
 		this.chats = new LinkedList <Chat> ();
 		this.chatters = new LinkedList <Chatter> ();
-		globalchat = new Chat(0, "GLOBAL");
-		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
+		//globalchat = new Chat(0, "GLOBAL");
+		//globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
+		saveDefaultGlobalChat();
 		loadChats();
 		for (Player p : chat.getServer().getOnlinePlayers()){
 			loadChatter(p.getUniqueId());
 		}
+	}
+	
+	public void saveDefaultGlobalChat(){
+		File folder = new File(chat.getDataFolder() + "/chats/global.yml");
+		if (!folder.exists()){
+			folder.mkdirs();
+			try {
+				folder.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			FileManager fm = new FileManager(chat, "chats/", "global");
+			if (!fm.exists()){
+				fm.createFile();
+			}
+			fm.getYAML().set("name", "GLOBAL");
+			fm.getYAML().set("prefix", nullToString("&aGLOBAL"));
+			fm.getYAML().set("suffix", nullToString(null));
+			fm.getYAML().set("messageColour", nullToString(null));
+			LinkedList <String> list = new LinkedList <String> ();
+			fm.getYAML().set("admins", list);
+			fm.getYAML().set("moderators", list);
+			fm.getYAML().set("displayRank", true);
+			fm.getYAML().set("alias", "/gl");
+			fm.getYAML().set("aliasApproved", true);
+			fm.getYAML().set("joinable", true);
+			fm.saveYAML();
+		}
+		
 	}
 	
 	//Chat methods that chat in the right channel
