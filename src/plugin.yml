@@ -2,6 +2,8 @@ name: ComChat
 main: net.mcviral.dev.plugins.comchat.main.ComChat
 version: 1.0
 author: comdude2
+loadbefore:
+ - Essentials
 commands:
    chat:
       description: This is this plugin's main command.

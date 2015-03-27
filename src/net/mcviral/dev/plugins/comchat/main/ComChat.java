@@ -117,6 +117,7 @@ public class ComChat extends JavaPlugin{
 						}else if (args[0].equalsIgnoreCase("reload")){
 							if (sender.hasPermission("chat.admin")){
 								this.getChatController().loadChats();
+								this.getChatController().loadChatters();
 								sender.sendMessage(ChatColor.GREEN + "Reloaded!");
 							}else{
 								//no perms
