@@ -19,21 +19,21 @@ permissions:
             chat.delete: true
             chat.colour: true
             chat.use: true
-    chat.admin
+    chat.admin:
         description: Gives chat admin permissions.
         default: op
-    chat.spy
+    chat.spy:
         description: Allows the player to view private messages.
         default: false
-    chat.create
+    chat.create:
         description: Allows the player to create chats (Channels).
         default: true
-    chat.delete
+    chat.delete:
         description: Allows the player to delete chats (Channels).
         default: false
-    chat.colour
+    chat.colour:
         description: Allows the player to use colour codes in their message.
         default: false
-    chat.use
+    chat.use:
         description: Allows usage of /chat
         default: true
