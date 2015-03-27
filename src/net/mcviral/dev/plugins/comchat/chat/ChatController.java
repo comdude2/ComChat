@@ -44,6 +44,9 @@ public class ChatController {
 		globalchat = new Chat(0, "GLOBAL");
 		globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 		loadChats();
+		for (Player p : chat.getServer().getOnlinePlayers()){
+			loadChatter(p.getUniqueId());
+		}
 	}
 	
 	//Chat methods that chat in the right channel
@@ -230,7 +233,29 @@ public class ChatController {
 	}
 	
 	public void saveChats(){
-		nullToString("");
+		//nullToString("");
+		FileManager fm = null;
+		for (Chat c : chats){
+			fm = new FileManager(chat, "chats/", c.getChatID() + "");
+			if (!fm.exists()){
+				fm.createFile();
+			}
+			fm.getYAML().set("name", c.getName());
+			fm.getYAML().set("prefix", nullToString(c.getPrefix()));
+			fm.getYAML().set("suffix", nullToString(c.getSuffix()));
+			fm.getYAML().set("messageColour", nullToString(c.getMessageColour()));
+			LinkedList <String> list = new LinkedList <String> ();
+			for (UUID uuid : c.getAdmins()){
+				list.add(uuid.toString());
+			}
+			fm.getYAML().set("admins", list);
+			for (UUID uuid : c.getModerators()){
+				list.add(uuid.toString());
+			}
+			fm.getYAML().set("moderators", list);
+			fm.getYAML().set("displayRank", c.getDisplayRank());
+			fm.saveYAML();
+		}
 	}
 	
 	public void loadChatter(UUID uuid){
