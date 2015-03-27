@@ -30,6 +30,7 @@ public class Chatter {
 	private LinkedList <Chat> chats = new LinkedList <Chat> ();
 	private String prefix = null;
 	private String suffix = null;
+	private String chatColour = null;
 	private boolean muted = false;
 	private long mutedUntil = 0L;
 	private boolean spy = false;
@@ -81,6 +82,14 @@ public class Chatter {
 
 	public void setSuffix(String suffix) {
 		this.suffix = suffix;
+	}
+
+	public String getChatColour() {
+		return chatColour;
+	}
+
+	public void setChatColour(String chatColour) {
+		this.chatColour = chatColour;
 	}
 
 	public long getMutedUntil() {

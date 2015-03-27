@@ -182,20 +182,26 @@ public class ChatController {
 	
 	public String formatMessage(Player player, Chatter chatter, Chat c, String message){
 		String msg = "";
-		if (c.getPrefix() != null){
+		if ((c.getPrefix() != null) && (!c.getPrefix().contains("null"))){
 			msg = msg + colour(c.getPrefix()) + " ";
 		}
 		//if (c.getDisplayRank()){
 			//msg = msg + c.getPrefix();
 		//}
-		msg = msg + player.getDisplayName();
-		if (c.getSuffix() != null){
+		msg = msg + player.getDisplayName() + colour("&f");
+		if ((c.getSuffix() != null) && (!c.getSuffix().contains("null"))){
 			msg = msg + colour(" " + c.getSuffix());
 		}
 		msg = msg + colour("&f: ");
-		if (c.getMessageColour() != null){
+		if ((c.getMessageColour() != null) && (!c.getMessageColour().contains("null"))){
+			//Testing lines:
+			//chat.log.info("chat message colour wasn't null");
+			//chat.log.info("" + c.getMessageColour());
 			msg = msg + c.getMessageColour() + message;
 		}else{
+			if ((chatter.getChatColour() != null) && (!chatter.getChatColour().contains("null"))){
+				msg = msg + colour(chatter.getChatColour());
+			}
 			if (player.hasPermission("chat.colour")){
 				msg = msg + colour(message);
 			}else{
@@ -324,9 +330,9 @@ public class ChatController {
 							chat.log.info("Loading .yml: " + f.getName().substring(0, f.getName().length() - 4));
 							int chatID = fm.getYAML().getInt("chatID");
 							String name = fm.getYAML().getString("name");
-							String prefix = fm.getYAML().getString("prefix");
-							String suffix = fm.getYAML().getString("suffix");
-							String messageColour = fm.getYAML().getString("messageColour");
+							String prefix = stringToNull(fm.getYAML().getString("prefix"));
+							String suffix = stringToNull(fm.getYAML().getString("suffix"));
+							String messageColour = stringToNull(fm.getYAML().getString("messageColour"));
 							String listnull = null;
 							try{
 								listnull = fm.getYAML().getString("admins");
@@ -508,6 +514,7 @@ public class ChatController {
 			}
 			String prefix = stringToNull(fm.getYAML().getString("prefix"));
 			String suffix = stringToNull(fm.getYAML().getString("suffix"));
+			String chatColour = stringToNull(fm.getYAML().getString("chatColour"));
 			boolean muted = fm.getYAML().getBoolean("muted");
 			long mutedUntil = fm.getYAML().getLong("mutedUntil");
 			boolean spy = fm.getYAML().getBoolean("spy");
@@ -515,6 +522,7 @@ public class ChatController {
 			chatter.setChats(chatterchats);
 			chatter.setPrefix(prefix);
 			chatter.setSuffix(suffix);
+			chatter.setChatColour(chatColour);
 			chatter.setMuted(muted);
 			chatter.setMutedUntil(mutedUntil);
 			chatter.setSpy(spy);
@@ -551,6 +559,7 @@ public class ChatController {
 		fm.getYAML().set("chats", chatids);
 		fm.getYAML().set("prefix", nullToString(chatter.getPrefix()));
 		fm.getYAML().set("suffix", nullToString(chatter.getSuffix()));
+		fm.getYAML().set("chatColour", nullToString(chatter.getChatColour()));
 		fm.getYAML().set("muted", chatter.isMuted());
 		fm.getYAML().set("mutedUntil", chatter.getMutedUntil());
 		fm.getYAML().set("spy", chatter.getSpy());
