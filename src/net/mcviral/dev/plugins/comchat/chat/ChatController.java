@@ -183,8 +183,8 @@ public class ChatController {
 		}
 	}
 	
-	public String fireEvent(String prefix){
-		ComChatChatEvent event = new ComChatChatEvent(prefix);
+	public String fireEvent(UUID uuid, String prefix){
+		ComChatChatEvent event = new ComChatChatEvent(uuid, prefix);
 		chat.getServer().getPluginManager().callEvent(event);
 		return event.getPrefix();
 	}
@@ -202,13 +202,13 @@ public class ChatController {
 			}
 			String prefix = "";
 			if (chatter.getPrefix() != null){
-				prefix += colour(chatter.getPrefix() + " ");
+				prefix += chatter.getPrefix() + " ";
 			}else if(g.getPrefix() != null){
-				prefix += colour(g.getPrefix() + " ");
+				prefix += g.getPrefix() + " ";
 			}
 			
 			//Check for prestige
-			prefix = fireEvent(prefix);
+			prefix = fireEvent(chatter.getUuid(), prefix);
 			msg += colour(prefix);
 			
 			msg += colour("&f" + player.getDisplayName() + " ");

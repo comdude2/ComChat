@@ -20,18 +20,29 @@ Contact: admin@mcviral.net
 
 package net.mcviral.dev.plugins.comchat.main;
 
+import java.util.UUID;
+
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class ComChatChatEvent extends Event{
 	
 	private static final HandlerList handlers = new HandlerList();
+	private UUID uuid = null;
 	private String prefix = null;
 	
-	public ComChatChatEvent(String prefix){
+	public ComChatChatEvent(UUID uuid, String prefix){
 		this.prefix = prefix;
 	}
 	
+	public UUID getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(UUID uuid) {
+		this.uuid = uuid;
+	}
+
 	public String getPrefix(){
 		return prefix;
 	}
