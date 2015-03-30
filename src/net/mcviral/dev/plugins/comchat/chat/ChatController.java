@@ -115,6 +115,7 @@ public class ChatController {
 						}
 					}
 					String msg = formatMessage(player, chatter, chatToSend, message);
+					chatToSend.getChatlog().log(msg);
 					chat.log.info(player.getName() + ": " + message);
 					for (Player p : recipients){
 						p.sendMessage(msg);
@@ -129,6 +130,7 @@ public class ChatController {
 						}
 					}
 					String msg = formatMessage(player, chatter, chatToSend, message);
+					chatToSend.getChatlog().log(msg);
 					chat.log.info(player.getName() + ": " + message);
 					for (Player p : recipients){
 						p.sendMessage(msg);
@@ -155,6 +157,7 @@ public class ChatController {
 						}
 					}
 					String msg = formatMessage(player, chatter, targetChat, message);
+					targetChat.getChatlog().log(msg);
 					chat.log.info(player.getName() + ": " + message);
 					for (Player p : recipients){
 						p.sendMessage(msg);
@@ -170,6 +173,7 @@ public class ChatController {
 						}
 					}
 					String msg = formatMessage(player, chatter, targetChat, message);
+					targetChat.getChatlog().log(msg);
 					chat.log.info(player.getName() + ": " + message);
 					for (Player p : recipients){
 						p.sendMessage(msg);
