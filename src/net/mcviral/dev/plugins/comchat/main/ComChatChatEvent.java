@@ -32,6 +32,7 @@ public class ComChatChatEvent extends Event{
 	private String prefix = null;
 	
 	public ComChatChatEvent(UUID uuid, String prefix){
+		this.uuid = uuid;
 		this.prefix = prefix;
 	}
 	

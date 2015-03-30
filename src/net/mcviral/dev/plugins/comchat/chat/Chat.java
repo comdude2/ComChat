@@ -23,6 +23,8 @@ package net.mcviral.dev.plugins.comchat.chat;
 import java.util.LinkedList;
 import java.util.UUID;
 
+import net.mcviral.dev.plugins.comchat.util.ChatLog;
+
 public class Chat {
 	
 	private int chatID = 0;
@@ -36,6 +38,7 @@ public class Chat {
 	private String alias = null;
 	private boolean aliasApproved = false;
 	private boolean joinable = false;
+	private ChatLog chatlog = null;
 	
 	public Chat(int chatID, String name){
 		this.setChatID(chatID);
@@ -128,6 +131,14 @@ public class Chat {
 
 	public void setJoinable(boolean joinable) {
 		this.joinable = joinable;
+	}
+
+	public ChatLog getChatlog() {
+		return chatlog;
+	}
+
+	public void setChatlog(ChatLog chatlog) {
+		this.chatlog = chatlog;
 	}
 	
 }

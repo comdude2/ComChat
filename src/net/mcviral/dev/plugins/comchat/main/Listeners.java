@@ -25,6 +25,7 @@ import net.mcviral.dev.plugins.comchat.chat.Chatter;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -46,11 +47,7 @@ public class Listeners implements Listener{
 	
 	public void unregister(){
 		//Unregister all events
-		PlayerCommandPreprocessEvent.getHandlerList().unregister(this);
-		AsyncPlayerChatEvent.getHandlerList().unregister(this);
-		PlayerJoinEvent.getHandlerList().unregister(this);
-		PlayerQuitEvent.getHandlerList().unregister(this);
-		PlayerKickEvent.getHandlerList().unregister(this);
+		HandlerList.unregisterAll(chat);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)

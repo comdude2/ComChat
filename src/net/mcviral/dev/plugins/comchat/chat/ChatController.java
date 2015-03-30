@@ -31,6 +31,7 @@ import org.bukkit.entity.Player;
 
 import net.mcviral.dev.plugins.comchat.main.ComChat;
 import net.mcviral.dev.plugins.comchat.main.ComChatChatEvent;
+import net.mcviral.dev.plugins.comchat.util.ChatLog;
 import net.mcviral.dev.plugins.comchat.util.FileManager;
 
 public class ChatController {
@@ -431,6 +432,7 @@ public class ChatController {
 							c.setAlias(alias);
 							c.setAliasApproved(aliasApproved);
 							c.setJoinable(joinable);
+							c.setChatlog(new ChatLog(chat, c));
 							chat.log.info(f.getName());
 							if (name.equals("GLOBAL")){
 								globalchat = c;
