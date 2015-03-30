@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 
 import net.mcviral.dev.plugins.comchat.main.ComChat;
+import net.mcviral.dev.plugins.comchat.main.ComChatChatEvent;
 import net.mcviral.dev.plugins.comchat.util.FileManager;
 
 public class ChatController {
@@ -182,6 +183,12 @@ public class ChatController {
 		}
 	}
 	
+	public String fireEvent(String prefix){
+		ComChatChatEvent event = new ComChatChatEvent(prefix);
+		chat.getServer().getPluginManager().callEvent(event);
+		return event.getPrefix();
+	}
+	
 	public String formatMessage(Player player, Chatter chatter, Chat c, String message){
 		String msg = "";
 		if (c.getDisplayRank()){
@@ -193,11 +200,17 @@ public class ChatController {
 			if (c.getPrefix() != null){
 				msg += colour(c.getPrefix() + " ");
 			}
+			String prefix = "";
 			if (chatter.getPrefix() != null){
-				msg += colour(chatter.getPrefix() + " ");
+				prefix += colour(chatter.getPrefix() + " ");
 			}else if(g.getPrefix() != null){
-				msg += colour(g.getPrefix() + " ");
+				prefix += colour(g.getPrefix() + " ");
 			}
+			
+			//Check for prestige
+			prefix = fireEvent(prefix);
+			msg += colour(prefix);
+			
 			msg += colour("&f" + player.getDisplayName() + " ");
 			if (c.getSuffix() != null){
 				msg += colour(c.getSuffix() + " ");
