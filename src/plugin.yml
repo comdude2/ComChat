@@ -24,6 +24,9 @@ permissions:
     chat.admin:
         description: Gives chat admin permissions.
         default: op
+    chat.moderate:
+        description: Gives chat moderator permissions.
+        default: op
     chat.spy:
         description: Allows the player to view private messages.
         default: false

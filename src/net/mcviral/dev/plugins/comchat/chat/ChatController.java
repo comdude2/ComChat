@@ -23,6 +23,7 @@ package net.mcviral.dev.plugins.comchat.chat;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,7 @@ import net.mcviral.dev.plugins.comchat.main.ComChat;
 import net.mcviral.dev.plugins.comchat.main.ComChatChatEvent;
 import net.mcviral.dev.plugins.comchat.util.ChatLog;
 import net.mcviral.dev.plugins.comchat.util.FileManager;
+import net.md_5.bungee.api.ChatColor;
 
 public class ChatController {
 	
@@ -145,46 +147,62 @@ public class ChatController {
 	}
 	
 	public void chatInDifferentToFocus(Player player, Chatter chatter, Chat targetChat, String message){
-		if (!chatter.isMuted()){
-			if (chatter.getChats().contains(targetChat)){
-				LinkedList <Player> recipients = new LinkedList <Player> ();
-				if (targetChat == globalchat){
-					//Global
-					for (Chatter c : chatters){
+		if (chatter.isMuted()){
+			Calendar cal = Calendar.getInstance();
+			Calendar cal2 = Calendar.getInstance();
+			if (chatter.getMutedUntil() == -1L){
+				//Perm muted
+				player.sendMessage(ChatColor.RED + "You are still permanently muted.");
+				return;
+			}else{
+				cal2.setTimeInMillis(chatter.getMutedUntil());
+				if (cal.after(cal2)){
+					//unmute
+					chat.log.info(player.getName() + " was unmuted as their mute time ran out.");
+					chatter.setMuted(false);
+					chatter.setMutedUntil(0L);
+				}else{
+					//still muted
+					player.sendMessage(ChatColor.RED + "You are still muted.");
+					return;
+				}
+			}
+		}
+		if (chatter.getChats().contains(targetChat)){
+			LinkedList <Player> recipients = new LinkedList <Player> ();
+			if (targetChat == globalchat){
+				//Global
+				for (Chatter c : chatters){
+					Player p = chat.getServer().getPlayer(c.getUuid());
+					if (p != null){
+						recipients.add(p);
+					}
+				}
+				String msg = formatMessage(player, chatter, targetChat, message);
+				targetChat.getChatlog().log(msg);
+				chat.log.info(player.getName() + ": " + message);
+				for (Player p : recipients){
+					p.sendMessage(msg);
+				}
+			}else{
+				//Not global
+				for (Chatter c : chatters){
+					if (c.getChats().contains(targetChat)){
 						Player p = chat.getServer().getPlayer(c.getUuid());
 						if (p != null){
 							recipients.add(p);
 						}
 					}
-					String msg = formatMessage(player, chatter, targetChat, message);
-					targetChat.getChatlog().log(msg);
-					chat.log.info(player.getName() + ": " + message);
-					for (Player p : recipients){
-						p.sendMessage(msg);
-					}
-				}else{
-					//Not global
-					for (Chatter c : chatters){
-						if (c.getChats().contains(targetChat)){
-							Player p = chat.getServer().getPlayer(c.getUuid());
-							if (p != null){
-								recipients.add(p);
-							}
-						}
-					}
-					String msg = formatMessage(player, chatter, targetChat, message);
-					targetChat.getChatlog().log(msg);
-					chat.log.info(player.getName() + ": " + message);
-					for (Player p : recipients){
-						p.sendMessage(msg);
-					}
 				}
-			}else{
-				//U wot m8
-				
+				String msg = formatMessage(player, chatter, targetChat, message);
+				targetChat.getChatlog().log(msg);
+				chat.log.info(player.getName() + ": " + message);
+				for (Player p : recipients){
+					p.sendMessage(msg);
+				}
 			}
 		}else{
-			//Muted
+			//U wot m8
 		}
 	}
 	

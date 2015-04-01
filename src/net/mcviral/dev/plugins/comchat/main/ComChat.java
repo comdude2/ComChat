@@ -21,6 +21,7 @@ Contact: admin@mcviral.net
 package net.mcviral.dev.plugins.comchat.main;
 
 import java.io.File;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.UUID;
 
@@ -325,6 +326,107 @@ public class ComChat extends JavaPlugin{
 							}
 						}else if (args[0].equalsIgnoreCase("invite")){
 							//<player> <chat>
+						}else if (args[0].equalsIgnoreCase("mute")){
+							//<player> <time>
+							Player p2 = this.getServer().getPlayer(args[1]);
+							if (p2 != null){
+								Chatter c = this.getChatController().getChatter(p2.getUniqueId());
+								if (c != null){
+									if (p.hasPermission("chat.moderate")){
+										if (!p2.hasPermission("chat.moderate")){
+											String time = args[2];
+											Calendar cal = Calendar.getInstance();
+											if (time.contains("s")){
+												//seconds
+												time = time.replaceAll("[^\\d.]", "");
+												try{
+													int ntime = Integer.parseInt(time);
+													cal.add(Calendar.SECOND, ntime);
+													c.setMuted(true);
+													c.setMutedUntil(cal.getTimeInMillis());
+													p.sendMessage(ChatColor.GREEN + "Player muted.");
+													p.sendMessage(ChatColor.RED + "You have been muted by " + ChatColor.YELLOW + p.getName() + ChatColor.RED + " for " + ChatColor.YELLOW + time);
+												}catch (Exception e){
+													p.sendMessage(ChatColor.DARK_RED + "Error: " + e.getMessage() + " check console for full details.");
+													e.printStackTrace();
+												}
+											}else if (time.contains("m")){
+												//minutes
+												time = time.replaceAll("[^\\d.]", "");
+												try{
+													int ntime = Integer.parseInt(time);
+													cal.add(Calendar.MINUTE, ntime);
+													c.setMuted(true);
+													c.setMutedUntil(cal.getTimeInMillis());
+													p.sendMessage(ChatColor.GREEN + "Player muted.");
+													p.sendMessage(ChatColor.RED + "You have been muted by " + ChatColor.YELLOW + p.getName() + ChatColor.RED + " for " + ChatColor.YELLOW + time);
+												}catch (Exception e){
+													p.sendMessage(ChatColor.DARK_RED + "Error: " + e.getMessage() + " check console for full details.");
+													e.printStackTrace();
+												}
+											}else if (time.contains("h")){
+												//hours
+												time = time.replaceAll("[^\\d.]", "");
+												try{
+													int ntime = Integer.parseInt(time);
+													cal.add(Calendar.HOUR, ntime);
+													c.setMuted(true);
+													c.setMutedUntil(cal.getTimeInMillis());
+													p.sendMessage(ChatColor.GREEN + "Player muted.");
+													p.sendMessage(ChatColor.RED + "You have been muted by " + ChatColor.YELLOW + p.getName() + ChatColor.RED + " for " + ChatColor.YELLOW + time);
+												}catch (Exception e){
+													p.sendMessage(ChatColor.DARK_RED + "Error: " + e.getMessage() + " check console for full details.");
+													e.printStackTrace();
+												}
+											}else if (time.contains("d")){
+												//days
+												time = time.replaceAll("[^\\d.]", "");
+												try{
+													int ntime = Integer.parseInt(time);
+													cal.add(Calendar.DAY_OF_YEAR, ntime);
+													c.setMuted(true);
+													c.setMutedUntil(cal.getTimeInMillis());
+													p.sendMessage(ChatColor.GREEN + "Player muted.");
+													p.sendMessage(ChatColor.RED + "You have been muted by " + ChatColor.YELLOW + p.getName() + ChatColor.RED + " for " + ChatColor.YELLOW + time);
+												}catch (Exception e){
+													p.sendMessage(ChatColor.DARK_RED + "Error: " + e.getMessage() + " check console for full details.");
+													e.printStackTrace();
+												}
+											}else if (time.contains("p")){
+												//perm
+												if (p.hasPermission("chat.admin")){
+													c.setMuted(true);
+													c.setMutedUntil(-1L);
+													this.getChatController().getGlobalChat().getChatlog().log(p.getName() + " muted " + p2.getName() + " permanently.");
+													for (Player p3 : this.getServer().getOnlinePlayers()){
+														if (p3.hasPermission("chat.moderate")){
+															p3.sendMessage(ChatColor.RED + p2.getName() + ChatColor.YELLOW + " was muted permanently by " + ChatColor.GREEN + p.getName());
+														}
+													}
+												}else{
+													//Need to be admin to perm mute
+													p.sendMessage(ChatColor.RED + "You need to be an admin to mute permanently.");
+												}
+											}else{
+												//Unknown time format
+												p.sendMessage(ChatColor.RED + "Unknown time format, formats are: s, m, h, d, p (p = permanent)");
+											}
+										}else{
+											//Muting a mod or admin
+											p.sendMessage(ChatColor.RED + "You can't mute a mod or admin.");
+										}
+									}else{
+										//Not a mod
+										p.sendMessage(ChatColor.RED + "You need to be a moderator to mute someone.");
+									}
+								}else{
+									//chatter null
+									p.sendMessage(ChatColor.RED + "Couldn't find chatter.");
+								}
+							}else{
+								//player null
+								p.sendMessage(ChatColor.RED + "Couldn't find player, are they online?");
+							}
 						}else{
 							help(sender);
 						}
