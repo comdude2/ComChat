@@ -22,6 +22,7 @@ package net.mcviral.dev.plugins.comchat.main;
 
 import net.mcviral.dev.plugins.comchat.chat.Chat;
 import net.mcviral.dev.plugins.comchat.chat.Chatter;
+import net.md_5.bungee.api.ChatColor;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -52,15 +53,20 @@ public class Listeners implements Listener{
 	
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onCommandPreProcess(PlayerCommandPreprocessEvent event){
+		chat.log.info(event.getMessage());
 		for (Chat c : chat.getChatController().getChats()){
 			if (event.getMessage().startsWith(c.getAlias() + " ")){
+				chat.log.info("Alias: " + c.getAlias());
 				//Forward to that chat
 				event.setCancelled(true);
 				Chatter chatter = chat.getChatController().getChatter(event.getPlayer().getUniqueId());
 				if (chatter != null){
-					String message = event.getMessage().substring(c.getAlias().length(), event.getMessage().length() - 1);//no -1 on alias length as we need to remove the space too.
+					chat.log.info("Pre-format message: " + event.getMessage().substring(c.getAlias().length() + 1, event.getMessage().length()));
+					String message = event.getMessage().substring(c.getAlias().length() + 1, event.getMessage().length());//no -1 on alias length as we need to remove the space too.
 					chat.getChatController().chatInDifferentToFocus(event.getPlayer(), chatter, c, message);
 				}else{
+					chat.log.info("Failed to find chatter object for: " + event.getPlayer().getName());
+					event.getPlayer().sendMessage(ChatColor.RED + "Couldn't find your chatter object, try rejoining.");
 					return;
 				}
 				break;

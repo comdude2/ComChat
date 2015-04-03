@@ -226,6 +226,7 @@ public class ChatController {
 			}
 		}else{
 			//U wot m8
+			player.sendMessage(ChatColor.RED + "You're not in " + targetChat.getName() + " chat, you need to be in it to talk in it.");
 		}
 	}
 	
@@ -256,8 +257,14 @@ public class ChatController {
 			//Check for prestige
 			prefix = fireEvent(chatter.getUuid(), prefix);
 			msg += colour(prefix);
-			
-			msg += colour("&f" + player.getDisplayName() + " ");
+			//Name Colour
+			String nameColour = c.getNameColour();
+			if (nameColour == null){
+				msg += colour("&f" + player.getDisplayName() + " ");
+			}else{
+				//chat.log.info("DEBUG: Name colour for " + c.getName() + " = " + nameColour);
+				msg += colour("&f" + nameColour + (ChatColor.stripColor(player.getDisplayName())) + " ");
+			}
 			if (c.getSuffix() != null){
 				msg += colour(c.getSuffix() + "");
 			}
@@ -289,7 +296,14 @@ public class ChatController {
 			if (chatter.getPrefix() != null){
 				msg += colour(chatter.getPrefix() + " ");
 			}
-			msg += colour("&f" + player.getDisplayName() + " ");
+			//Name Colour
+			String nameColour = c.getNameColour();
+			if (nameColour == null){
+				msg += colour("&f" + player.getDisplayName() + " ");
+			}else{
+				//chat.log.info("DEBUG: Name colour for " + c.getName() + " = " + nameColour);
+				msg += colour("&f" + nameColour + (ChatColor.stripColor(player.getDisplayName())) + " ");
+			}
 			if (c.getSuffix() != null){
 				msg += colour(c.getSuffix() + " ");
 			}
@@ -430,6 +444,7 @@ public class ChatController {
 							int chatID = fm.getYAML().getInt("chatID");
 							String name = fm.getYAML().getString("name");
 							String prefix = fm.getYAML().getString("prefix");
+							String nameColour = fm.getYAML().getString("nameColour");
 							String suffix = fm.getYAML().getString("suffix");
 							String messageColour = fm.getYAML().getString("messageColour");
 							String listnull = null;
@@ -469,6 +484,7 @@ public class ChatController {
 							boolean joinable = fm.getYAML().getBoolean("joinable");
 							Chat c = new Chat(chatID, name);
 							c.setPrefix(prefix);
+							c.setNameColour(nameColour);
 							c.setSuffix(suffix);
 							c.setMessageColour(messageColour);
 							c.setAdmins(admins);
@@ -502,58 +518,57 @@ public class ChatController {
 		}
 	}
 	
-	//private String stringToNull(String s){
-		//if (s.startsWith("null")){
-			//s = null;
-		//}
-		//return s;
-	//}
-	
-	//private String nullToString(String s){
-		//if (s == null){
-			//s = "null";
-		//}
-		//return s;
-	//}
-	
 	public void saveChats(){
-		//nullToString("");
 		FileManager fm = null;
 		for (Chat c : chats){
 			if (c.getName() != "GLOBAL"){
+				chat.log.info("Saving chat: " + c.getChatID() + " with name: " + c.getName());
 				fm = new FileManager(chat, "chats/", c.getChatID() + "");
 			}else{
+				chat.log.info("Saving chat: GLOBAL");
 				fm = new FileManager(chat, "chats/", "global");
 			}
 			if (!fm.exists()){
-				fm.createFile();
+				boolean created = fm.createFile();
+				if (created){
+					chat.log.info("Created file for chat.");
+				}else{
+					chat.log.info("Failed to create file for chat.");
+				}
 			}
-			fm.getYAML().set("name", c.getName());
-			fm.getYAML().set("prefix", c.getPrefix());
-			fm.getYAML().set("suffix", c.getSuffix());
-			fm.getYAML().set("messageColour", c.getMessageColour());
-			LinkedList <String> list = new LinkedList <String> ();
-			for (UUID uuid : c.getAdmins()){
-				list.add(uuid.toString());
+			try{
+				fm.getYAML().set("name", c.getName());
+				fm.getYAML().set("prefix", c.getPrefix());
+				fm.getYAML().set("nameColour", c.getNameColour());
+				fm.getYAML().set("suffix", c.getSuffix());
+				fm.getYAML().set("messageColour", c.getMessageColour());
+				LinkedList <String> list = new LinkedList <String> ();
+				for (UUID uuid : c.getAdmins()){
+					list.add(uuid.toString());
+				}
+				if (list.size() > 0){
+					fm.getYAML().set("admins", list);
+				}else{
+					fm.getYAML().set("admins", null);
+				}
+				for (UUID uuid : c.getModerators()){
+					list.add(uuid.toString());
+				}
+				if (list.size() > 0){
+					fm.getYAML().set("moderators", list);
+				}else{
+					fm.getYAML().set("moderators", null);
+				}
+				fm.getYAML().set("displayRank", c.getDisplayRank());
+				fm.getYAML().set("alias", c.getAlias());
+				fm.getYAML().set("aliasApproved", c.isAliasApproved());
+				fm.getYAML().set("joinable", c.isJoinable());
+				fm.saveYAML();
+				chat.log.info("Chat saved.");
+			}catch(Exception e){
+				chat.log.severe("FAILED TO SAVE CHAT: " + c.getName() + " with ID: " + c.getChatID());
+				e.printStackTrace();
 			}
-			if (list.size() > 0){
-				fm.getYAML().set("admins", list);
-			}else{
-				fm.getYAML().set("admins", null);
-			}
-			for (UUID uuid : c.getModerators()){
-				list.add(uuid.toString());
-			}
-			if (list.size() > 0){
-				fm.getYAML().set("moderators", list);
-			}else{
-				fm.getYAML().set("moderators", null);
-			}
-			fm.getYAML().set("displayRank", c.getDisplayRank());
-			fm.getYAML().set("alias", c.getAlias());
-			fm.getYAML().set("aliasApproved", c.isAliasApproved());
-			fm.getYAML().set("joinable", c.isJoinable());
-			fm.saveYAML();
 		}
 	}
 	

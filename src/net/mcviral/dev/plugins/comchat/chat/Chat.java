@@ -30,6 +30,7 @@ public class Chat {
 	private int chatID = 0;
 	private String name = null;
 	private String prefix = null;
+	private String nameColour = null;
 	private String suffix = null;
 	private String messageColour = null;
 	private LinkedList <UUID> admins = new LinkedList <UUID> ();
@@ -67,6 +68,14 @@ public class Chat {
 
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
+	}
+
+	public String getNameColour() {
+		return nameColour;
+	}
+
+	public void setNameColour(String nameColour) {
+		this.nameColour = nameColour;
 	}
 
 	public String getSuffix() {
