@@ -43,11 +43,13 @@ public class ChatController {
 	private LinkedList <Chat> chats = new LinkedList <Chat> ();
 	private LinkedList <Chatter> chatters = new LinkedList <Chatter> ();
 	private LinkedList <Group> groups = new LinkedList <Group> ();
+	private MessageManager messagemanager = null;
 	
 	public ChatController(ComChat chat){
 		this.chat = chat;
 		this.chats = new LinkedList <Chat> ();
 		this.chatters = new LinkedList <Chatter> ();
+		this.messagemanager = new MessageManager(chat);
 		//globalchat = new Chat(0, "GLOBAL");
 		//globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 		saveDefaultGlobalChat();
@@ -101,45 +103,66 @@ public class ChatController {
 		
 	}
 	
+	public MessageManager getMessageManager(){
+		return messagemanager;
+	}
+	
 	//Chat methods that chat in the right channel
 	
 	public void chat(Player player, String message){
 		Chatter chatter = getChatter(player.getUniqueId());
 		if (chatter != null){
-			if (!chatter.isMuted()){
-				Chat chatToSend = chatter.getFocus();
-				LinkedList <Player> recipients = new LinkedList <Player> ();
-				if (chatToSend == globalchat){
-					for (Chatter c : chatters){
+			if (chatter.isMuted()){
+				Calendar cal = Calendar.getInstance();
+				Calendar cal2 = Calendar.getInstance();
+				if (chatter.getMutedUntil() == -1L){
+					//Perm muted
+					player.sendMessage(ChatColor.RED + "You are still permanently muted.");
+					return;
+				}else{
+					cal2.setTimeInMillis(chatter.getMutedUntil());
+					if (cal.after(cal2)){
+						//unmute
+						chat.log.info(player.getName() + " was unmuted as their mute time ran out.");
+						chatter.setMuted(false);
+						chatter.setMutedUntil(0L);
+					}else{
+						//still muted
+						player.sendMessage(ChatColor.RED + "You are still muted.");
+						return;
+					}
+				}
+			}
+			Chat chatToSend = chatter.getFocus();
+			LinkedList <Player> recipients = new LinkedList <Player> ();
+			if (chatToSend == globalchat){
+				for (Chatter c : chatters){
+					Player p = chat.getServer().getPlayer(c.getUuid());
+					if (p != null){
+						recipients.add(p);
+					}
+				}
+				String msg = formatMessage(player, chatter, chatToSend, message);
+				chatToSend.getChatlog().log(msg);
+				chat.log.info(player.getName() + ": " + message);
+				for (Player p : recipients){
+					p.sendMessage(msg);
+				}
+			}else{
+				for (Chatter c : chatters){
+					if (c.getChats().contains(chatToSend)){
 						Player p = chat.getServer().getPlayer(c.getUuid());
 						if (p != null){
 							recipients.add(p);
 						}
 					}
-					String msg = formatMessage(player, chatter, chatToSend, message);
-					chatToSend.getChatlog().log(msg);
-					chat.log.info(player.getName() + ": " + message);
-					for (Player p : recipients){
-						p.sendMessage(msg);
-					}
-				}else{
-					for (Chatter c : chatters){
-						if (c.getChats().contains(chatToSend)){
-							Player p = chat.getServer().getPlayer(c.getUuid());
-							if (p != null){
-								recipients.add(p);
-							}
-						}
-					}
-					String msg = formatMessage(player, chatter, chatToSend, message);
-					chatToSend.getChatlog().log(msg);
-					chat.log.info(player.getName() + ": " + message);
-					for (Player p : recipients){
-						p.sendMessage(msg);
-					}
 				}
-			}else{
-				//Muted
+				String msg = formatMessage(player, chatter, chatToSend, message);
+				chatToSend.getChatlog().log(msg);
+				chat.log.info(player.getName() + ": " + message);
+				for (Player p : recipients){
+					p.sendMessage(msg);
+				}
 			}
 		}else{
 			//Failed to send message.
@@ -187,7 +210,7 @@ public class ChatController {
 			}else{
 				//Not global
 				for (Chatter c : chatters){
-					if (c.getChats().contains(targetChat)){
+					if ((c.getChats().contains(targetChat)) || (c.getSpy())){
 						Player p = chat.getServer().getPlayer(c.getUuid());
 						if (p != null){
 							recipients.add(p);
@@ -236,12 +259,12 @@ public class ChatController {
 			
 			msg += colour("&f" + player.getDisplayName() + " ");
 			if (c.getSuffix() != null){
-				msg += colour(c.getSuffix() + " ");
+				msg += colour(c.getSuffix() + "");
 			}
 			if (chatter.getSuffix() != null){
-				msg += colour(chatter.getSuffix() + " ");
+				msg += colour(chatter.getSuffix() + "");
 			}else if(g.getSuffix() != null){
-				msg += colour(g.getSuffix() + " ");
+				msg += colour(g.getSuffix() + "");
 			}
 			msg += colour("&f: ");
 			if (c.getMessageColour() != null){
@@ -620,7 +643,6 @@ public class ChatController {
 			try {
 				folder.createNewFile();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}

@@ -10,12 +10,33 @@ commands:
       usage: /<command> help
       permission: chat.use
       permission-message: You don't have the required permission to perform this command.
+   mute:
+      description: This is this plugin's main command.
+      usage: /<command> help
+      permission: chat.use
+      permission-message: You don't have the required permission to perform this command.
+   msg:
+      description: This is this plugin's main messaging command.
+      usage: /<command> help
+      permission: chat.use
+      permission-message: You don't have the required permission to perform this command.
+   message:
+      description: This is this plugin's main messaging command.
+      usage: /<command> help
+      permission: chat.use
+      permission-message: You don't have the required permission to perform this command.
+   m:
+      description: This is this plugin's main messaging command.
+      usage: /<command> help
+      permission: chat.use
+      permission-message: You don't have the required permission to perform this command.
 permissions:
     chat.*:
         description: Gives access to all chat commands.
         default: op
         children:
             chat.admin: true
+            chat.moderate: true
             chat.spy: true
             chat.create: true
             chat.delete: true
