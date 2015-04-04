@@ -833,7 +833,7 @@ public class ComChat extends JavaPlugin{
 		sender.sendMessage(ChatColor.YELLOW + "/chat delete" + parameter("chat"));
 		sender.sendMessage(ChatColor.YELLOW + "/chat kick" + parameter("player") + parameter("chat"));
 		sender.sendMessage(ChatColor.YELLOW + "/chat admin" + parameter("chat") + parameter("player"));
-		sender.sendMessage(ChatColor.YELLOW + "/chat set" + parameter("name|password|joinable|prefix|namecolour|suffix|messagecolour|displayrank|alias") + parameter("value"));
+		sender.sendMessage(ChatColor.YELLOW + "/chat set" + parameter("chat") + parameter("name|password|joinable|prefix|namecolour|suffix|messagecolour|displayrank|alias") + parameter("value"));
 		sender.sendMessage(ChatColor.YELLOW + "/chat approve" + parameter("alias") + parameter("chat") + parameter("value"));
 		if (sender.hasPermission("chat.moderate")){
 			sender.sendMessage(ChatColor.GOLD + "/chat mute" + parameter("player") + parameter("time [s|m|h|d|p]"));
