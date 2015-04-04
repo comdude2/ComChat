@@ -39,6 +39,7 @@ public class Chat {
 	private String alias = null;
 	private boolean aliasApproved = false;
 	private boolean joinable = false;
+	private String password = null;
 	private ChatLog chatlog = null;
 	
 	public Chat(int chatID, String name){
@@ -140,6 +141,14 @@ public class Chat {
 
 	public void setJoinable(boolean joinable) {
 		this.joinable = joinable;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	public ChatLog getChatlog() {

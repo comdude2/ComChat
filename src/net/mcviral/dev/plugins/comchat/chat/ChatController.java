@@ -22,6 +22,9 @@ package net.mcviral.dev.plugins.comchat.chat;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedList;
@@ -383,6 +386,9 @@ public class ChatController {
 	}
 	
 	public Chat getChat(String name){
+		if (name.equalsIgnoreCase(globalchat.getName())){
+			return globalchat;
+		}
 		for (Chat c : chats){
 			if (c.getName().equalsIgnoreCase(name)){
 				return c;
@@ -482,6 +488,7 @@ public class ChatController {
 							String alias = fm.getYAML().getString("alias");
 							boolean aliasApproved = fm.getYAML().getBoolean("aliasApproved");
 							boolean joinable = fm.getYAML().getBoolean("joinable");
+							String password = fm.getYAML().getString("password");
 							Chat c = new Chat(chatID, name);
 							c.setPrefix(prefix);
 							c.setNameColour(nameColour);
@@ -493,6 +500,7 @@ public class ChatController {
 							c.setAlias(alias);
 							c.setAliasApproved(aliasApproved);
 							c.setJoinable(joinable);
+							c.setPassword(password);
 							c.setChatlog(new ChatLog(chat, c));
 							chat.log.info(f.getName());
 							if (name.equals("GLOBAL")){
@@ -563,6 +571,7 @@ public class ChatController {
 				fm.getYAML().set("alias", c.getAlias());
 				fm.getYAML().set("aliasApproved", c.isAliasApproved());
 				fm.getYAML().set("joinable", c.isJoinable());
+				fm.getYAML().set("password", c.getPassword());
 				fm.saveYAML();
 				chat.log.info("Chat saved.");
 			}catch(Exception e){
@@ -773,6 +782,28 @@ public class ChatController {
 			//chat.log.info("No");
 		}
 		return null;
+	}
+	
+	public static String generateMD5(String message){
+		try {
+			MessageDigest digest = MessageDigest.getInstance("MD5");
+			byte[] hash = digest.digest(message.getBytes("UTF-8"));
+			return convertByteArrayToHexString(hash);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private static String convertByteArrayToHexString(byte[] arrayBytes) {
+	    StringBuffer stringBuffer = new StringBuffer();
+	    for (int i = 0; i < arrayBytes.length; i++) {
+	        stringBuffer.append(Integer.toString((arrayBytes[i] & 0xff) + 0x100, 16)
+	                .substring(1));
+	    }
+	    return stringBuffer.toString();
 	}
 	
 }
