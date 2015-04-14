@@ -58,7 +58,6 @@ public class ChatLog {
 		DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String date = null;
 		date = sdf.format(cal.getTime());
-		chat.log.info(date);
 		return date;
 	}
 	

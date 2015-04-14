@@ -34,6 +34,7 @@ public class Chatter {
 	private boolean muted = false;
 	private long mutedUntil = 0L;
 	private boolean spy = false;
+	private Message lastMessage = null;
 	
 	public Chatter(UUID uuid, Chat focus){
 		this.uuid = uuid;
@@ -106,6 +107,14 @@ public class Chatter {
 
 	public void setSpy(boolean spy) {
 		this.spy = spy;
+	}
+
+	public Message getLastMessage() {
+		return lastMessage;
+	}
+
+	public void setLastMessage(Message lastMessage) {
+		this.lastMessage = lastMessage;
 	}
 	
 }

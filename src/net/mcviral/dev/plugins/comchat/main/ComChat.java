@@ -21,6 +21,8 @@ Contact: admin@mcviral.net
 package net.mcviral.dev.plugins.comchat.main;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.UUID;
@@ -46,18 +48,30 @@ public class ComChat extends JavaPlugin{
 		this.saveDefaultConfig();
 		setupFolders();
 		log = new Log(this.getDescription().getName());
+		log.info("Started enabling from: " + getDateTime());
 		listeners = new Listeners(this);
 		listeners.register();
 		chatcontroller = new ChatController(this);
 		this.getLogger().info(this.getDescription().getName() + " Enabled!");
+		log.info("Finished enabling at: " + getDateTime());
 	}
 	
 	public void onDisable(){
+		log.info("Started disabling from: " + getDateTime());
+		log.info("Saving chats...");
 		this.getChatController().saveChats();
+		log.info("Chats finished saving.");
+		log.info("Saving chatters...");
 		this.getChatController().saveChatters();
+		log.info("Chatters finished saving.");
+		log.info("Saving groups...");
 		this.getChatController().saveGroups();
+		log.info("Groups finished saving.");
+		log.info("Starting to unregister events...");
 		listeners.unregister();
+		log.info("Finished unregistering events.");
 		this.getLogger().info(this.getDescription().getName() + " Disabled!");
+		log.info("Finished disabling at: " + getDateTime());
 	}
 	
 	public boolean reload(){
@@ -92,6 +106,19 @@ public class ComChat extends JavaPlugin{
 		}
 	}
 	
+	public String getDateTime(){
+		try{
+			Calendar cal = Calendar.getInstance();
+			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String date = null;
+			date = sdf.format(cal.getTime());
+			return date;
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public ChatController getChatController(){
 		return chatcontroller;
 	}
@@ -119,6 +146,10 @@ public class ComChat extends JavaPlugin{
 							}
 						}else if (args[0].equalsIgnoreCase("reload")){
 							if (sender.hasPermission("chat.admin")){
+								LinkedList <Chat> chats = new LinkedList <Chat> ();
+								LinkedList <Chatter> chatters = new LinkedList <Chatter> ();
+								this.getChatController().setChats(chats);
+								this.getChatController().setChatters(chatters);
 								this.getChatController().loadChats();
 								this.getChatController().loadChatters();
 								sender.sendMessage(ChatColor.GREEN + "Reloaded!");
@@ -575,9 +606,12 @@ public class ComChat extends JavaPlugin{
 											}
 										}else{
 											//They need to get password correct
+											log.info("Typed password: " + password);
 											password = ChatController.generateMD5(password);
+											log.info("Typed to MD5: " + password);
 											if (password != null){
-												if (password == c.getPassword()){
+												log.info("Chat password: " + c.getPassword());
+												if (password.equalsIgnoreCase(c.getPassword())){
 													LinkedList <Chat> chats = chatter.getChats();
 													chats.add(c);
 													chatter.setChats(chats);
@@ -631,6 +665,7 @@ public class ComChat extends JavaPlugin{
 										String value = null;
 										value = args[3];
 										c.setPassword(ChatController.generateMD5(value));
+										log.info("Chat password: " + c.getPassword());
 										p.sendMessage(ChatColor.YELLOW + "Password changed.");
 									}else{
 										sender.sendMessage(ChatColor.RED + "You need to be an admin of this chat to modify it's settings.");
@@ -799,9 +834,16 @@ public class ComChat extends JavaPlugin{
 				return true;
 			}else if ((cmd.getName().equalsIgnoreCase("message")) || (cmd.getName().equalsIgnoreCase("msg")) || (cmd.getName().equalsIgnoreCase("m"))){
 				if (args.length > 0){
-					if (args.length == 2){
+					if (args.length >= 2){
 						Player r = this.getServer().getPlayer(args[0]);
-						String message = args[1];
+						String message = "";
+						int i = 0;
+						for (String arg : args){
+							if (i >= 1){
+								message = message + arg + " ";
+							}
+							i++;
+						}
 						if (r != null){
 							this.getChatController().getMessageManager().message(p, r, message);
 						}else{
@@ -833,7 +875,7 @@ public class ComChat extends JavaPlugin{
 		sender.sendMessage(ChatColor.YELLOW + "/chat delete" + parameter("chat"));
 		sender.sendMessage(ChatColor.YELLOW + "/chat kick" + parameter("player") + parameter("chat"));
 		sender.sendMessage(ChatColor.YELLOW + "/chat admin" + parameter("chat") + parameter("player"));
-		sender.sendMessage(ChatColor.YELLOW + "/chat set" + parameter("chat") + parameter("name|password|joinable|prefix|namecolour|suffix|messagecolour|displayrank|alias") + parameter("value"));
+		sender.sendMessage(ChatColor.YELLOW + "/chat set" + parameter("name|password|joinable|prefix|namecolour|suffix|messagecolour|displayrank|alias") + parameter("chat") + parameter("value"));
 		sender.sendMessage(ChatColor.YELLOW + "/chat approve" + parameter("alias") + parameter("chat") + parameter("value"));
 		if (sender.hasPermission("chat.moderate")){
 			sender.sendMessage(ChatColor.GOLD + "/chat mute" + parameter("player") + parameter("time [s|m|h|d|p]"));

@@ -57,9 +57,14 @@ public class ChatController {
 		//globalchat.setPrefix(colour("&f[&aGLOBAL&f]"));
 		saveDefaultGlobalChat();
 		loadChats();
+		//Problem
 		loadGroups();
-		for (Player p : chat.getServer().getOnlinePlayers()){
-			loadChatter(p.getUniqueId());
+		if (chat.getServer().getOnlinePlayers().size() > 0){
+			chat.log.info("Loading chatters for all online players...");
+			chat.getServer().broadcastMessage(colour("&f[&eComChat&f] &cis reloading, this stage of the reload can cause a lot of lag, please be patient and refrain from saying 'lag'."));
+			for (Player p : chat.getServer().getOnlinePlayers()){
+				loadChatter(p.getUniqueId());
+			}
 		}
 	}
 	
@@ -305,13 +310,13 @@ public class ChatController {
 				msg += colour("&f" + player.getDisplayName() + " ");
 			}else{
 				//chat.log.info("DEBUG: Name colour for " + c.getName() + " = " + nameColour);
-				msg += colour("&f" + nameColour + (ChatColor.stripColor(player.getDisplayName())) + " ");
+				msg += colour("&f" + nameColour + (ChatColor.stripColor(player.getDisplayName())));
 			}
 			if (c.getSuffix() != null){
-				msg += colour(c.getSuffix() + " ");
+				msg += colour(" " + c.getSuffix());
 			}
 			if (chatter.getSuffix() != null){
-				msg += colour(chatter.getSuffix() + " ");
+				msg += colour(" " + chatter.getSuffix());
 			}
 			msg += colour("&f: ");
 			if (c.getMessageColour() != null){
@@ -319,6 +324,8 @@ public class ChatController {
 			}else{
 				if (chatter.getChatColour() != null){
 					msg += colour(chatter.getChatColour() + message);
+				}else{
+					msg += ChatColor.stripColor(message);
 				}
 			}
 		}
@@ -430,7 +437,7 @@ public class ChatController {
 		this.chatters = chatters;
 	}
 	
-	public void loadChats(){
+	public synchronized void loadChats(){
 		try{
 			chats = new LinkedList <Chat> ();
 			File folder = new File(chat.getDataFolder() + "/chats/");
@@ -518,6 +525,7 @@ public class ChatController {
 						chat.log.info("Directory: " + f.getAbsolutePath() + f.getName() + " is a directory and in the chats folder, why is it there?");
 					}
 				}
+				chat.log.info("Finished loading chats.");
 			}else{
 				//No chats to load
 			}
@@ -526,7 +534,7 @@ public class ChatController {
 		}
 	}
 	
-	public void saveChats(){
+	public synchronized void saveChats(){
 		FileManager fm = null;
 		for (Chat c : chats){
 			if (c.getName() != "GLOBAL"){
@@ -581,7 +589,7 @@ public class ChatController {
 		}
 	}
 	
-	public void saveChat(Chat c){
+	public synchronized void saveChat(Chat c){
 		FileManager fm = null;
 		if (c.getName() != "GLOBAL"){
 			fm = new FileManager(chat, "chats/", c.getChatID() + "");
@@ -619,7 +627,7 @@ public class ChatController {
 		fm.saveYAML();
 	}
 	
-	public void loadChatter(UUID uuid){
+	public synchronized void loadChatter(UUID uuid){
 		chat.log.info("Loading chatter: " + uuid.toString());
 		FileManager fm = new FileManager(chat, "chatters/", uuid.toString());
 		if (fm.exists()){
@@ -660,7 +668,7 @@ public class ChatController {
 		chat.log.info("Loaded chatter.");
 	}
 	
-	public void saveChatter(Chatter chatter){
+	public synchronized void saveChatter(Chatter chatter){
 		chat.log.info("Saving chatter: " + chatter.getUuid().toString());
 		File folder = new File(chat.getDataFolder() + "/chatters/" + chatter.getUuid().toString() + ".yml");
 		if (!folder.exists()){
@@ -687,7 +695,7 @@ public class ChatController {
 		chat.log.info("Saved chatter.");
 	}
 	
-	public void saveChatters(){
+	public synchronized void saveChatters(){
 		for (Chatter c : chatters){
 			try{
 				saveChatter(c);
@@ -705,7 +713,7 @@ public class ChatController {
 		return true;
 	}
 	
-	public void loadChatters(){
+	public synchronized void loadChatters(){
 		try{
 			for (Player p : chat.getServer().getOnlinePlayers()){
 				if (chatterIsOnFile(p.getUniqueId())){
@@ -727,7 +735,7 @@ public class ChatController {
 		this.groups = groups;
 	}
 	
-	public void loadGroups(){
+	public synchronized void loadGroups(){
 		groups = new LinkedList <Group> ();
 		FileManager fm = new FileManager(chat, "", "groups");
 		if (fm.exists()){
@@ -755,7 +763,7 @@ public class ChatController {
 		}
 	}
 	
-	public void saveGroups(){
+	public synchronized void saveGroups(){
 		FileManager fm = new FileManager(chat, "", "groups");
 		if (!fm.exists()){
 			fm.createFile();

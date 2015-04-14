@@ -30,6 +30,11 @@ commands:
       usage: /<command> help
       permission: chat.use
       permission-message: You don't have the required permission to perform this command.
+   r:
+      description: This is this plugin's main messaging command.
+      usage: /<command> help
+      permission: chat.use
+      permission-message: You don't have the required permission to perform this command.
 permissions:
     chat.*:
         description: Gives access to all chat commands.

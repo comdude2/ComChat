@@ -36,6 +36,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class Listeners implements Listener{
 	
+	//chat.log.severe("");
+	
 	private ComChat chat = null;
 	
 	public Listeners(ComChat chat){
@@ -43,17 +45,35 @@ public class Listeners implements Listener{
 	}
 	
 	public void register(){
-		chat.getServer().getPluginManager().registerEvents(this, chat);
+		try{
+			chat.getServer().getPluginManager().registerEvents(this, chat);
+		}catch (Exception e){
+			chat.log.severe("################################# ERROR! #################################");
+			chat.log.severe("Failed to unregister events binded to the server!");
+			chat.log.severe("Stack Trace: ");
+			e.printStackTrace();
+			chat.log.severe("############################## End of error ##############################");
+			chat.getServer().getPluginManager().disablePlugin(chat);
+		}
 	}
 	
 	public void unregister(){
 		//Unregister all events
-		HandlerList.unregisterAll(chat);
+		chat.log.info("Unregistering events...");
+		try{
+			HandlerList.unregisterAll(chat);
+		}catch (Exception e){
+			chat.log.severe("################################# ERROR! #################################");
+			chat.log.severe("Failed to unregister events binded to the server!");
+			chat.log.severe("Stack Trace: ");
+			e.printStackTrace();
+			chat.log.severe("############################## End of error ##############################");
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onCommandPreProcess(PlayerCommandPreprocessEvent event){
-		chat.log.info(event.getMessage());
+		chat.log.info(event.getPlayer().getName() + ": " + event.getMessage());
 		for (Chat c : chat.getChatController().getChats()){
 			if (event.getMessage().startsWith(c.getAlias() + " ")){
 				chat.log.info("Alias: " + c.getAlias());
@@ -82,12 +102,15 @@ public class Listeners implements Listener{
 		}
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent event){
 		if (!chat.getChatController().chatterIsOnFile(event.getPlayer().getUniqueId())){
 			chat.getChatController().getChatters().add(new Chatter(event.getPlayer().getUniqueId(), chat.getChatController().getGlobalChat()));
 		}else{
 			chat.getChatController().loadChatter(event.getPlayer().getUniqueId());
+		}
+		if (event.getPlayer().hasPermission("chat.group.warden")){
+			chat.getServer().dispatchCommand(event.getPlayer(), "effect " + event.getPlayer().getName() + " clear");
 		}
 	}
 	
